@@ -6,6 +6,9 @@ use App\Http\Controllers\AddressController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\EnquiryController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\SubCategoryController;
+use App\Http\Controllers\VendorController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/users', [UserController::class, 'index']); // Get all users
@@ -22,7 +25,7 @@ Route::put('/addresses/{address}', [AddressController::class, 'update']); // Upd
 Route::delete('/addresses/{address}', [AddressController::class, 'destroy']); // Delete an address
 
 
-Route::get('/services', [ServiceController::class, 'index']); // Get all services
+Route::get('/services', [ServiceController::class, 'index']); // List all services
 Route::post('/services', [ServiceController::class, 'store']); // Create a new service
 Route::get('/services/{service}', [ServiceController::class, 'show']); // Get a single service
 Route::put('/services/{service}', [ServiceController::class, 'update']); // Update a service
@@ -60,3 +63,54 @@ Route::put('/enquiries/{enquiry}', [EnquiryController::class, 'update']);
 
 // Delete an enquiry
 Route::delete('/enquiries/{enquiry}', [EnquiryController::class, 'destroy']);
+
+
+
+// Get all categories
+Route::get('/categories', [CategoryController::class, 'index']);
+
+// Create a new category
+Route::post('/categories', [CategoryController::class, 'store']);
+
+// Get a single category by ID
+Route::get('/categories/{id}', [CategoryController::class, 'show']);
+
+// Update a category by ID
+Route::put('/categories/{id}', [CategoryController::class, 'update']);
+
+// Delete a category by ID
+Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+
+
+
+
+// Get all subcategories
+Route::get('/subcategories', [SubCategoryController::class, 'index']);
+
+// Create a new subcategory
+Route::post('/subcategories', [SubCategoryController::class, 'store']);
+
+
+// Get a single subcategory by ID
+Route::get('/subcategories/{subcategory}', [SubCategoryController::class, 'show']);
+
+// Update a subcategory by ID
+Route::put('/subcategories/{subcategory}', [SubCategoryController::class, 'update']);
+
+// Delete a subcategory by ID
+Route::delete('/subcategories/{subcategory}', [SubCategoryController::class, 'destroy']);
+
+Route::get('/vendors', [VendorController::class, 'index']);
+
+// Create a new vendor
+Route::post('/vendors', [VendorController::class, 'store']);
+
+// Show single vendor by ID
+Route::get('/vendors/{id}', [VendorController::class, 'show']);
+
+// Update an existing vendor
+Route::put('/vendors/{id}', [VendorController::class, 'update']);
+
+// Delete a vendor
+Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);

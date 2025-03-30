@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ServiceController extends Controller
 {
@@ -30,6 +31,8 @@ class ServiceController extends Controller
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('services', 'public');
         }
+
+        $validated['slug'] = Str::slug($validated['title']); // Generate slug
 
         $service = Service::create($validated);
 
@@ -60,6 +63,10 @@ class ServiceController extends Controller
                 Storage::disk('public')->delete($service->image);
             }
             $validated['image'] = $request->file('image')->store('services', 'public');
+        }
+
+        if (isset($validated['title'])) {
+            $validated['slug'] = Str::slug($validated['title']); // Update slug if title changes
         }
 
         $service->update($validated);
