@@ -11,8 +11,9 @@ class Vendor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'sub_category_id', 'non_veg', 'veg',
-        'starting_price', 'contact', 'mail', 'cover_image'
+        'name', 'slug', 'category_id', 'subcategory_id', 'address', 'state', 'city', 'country', 
+        'veg_price', 'non_veg_price', 'price_type', 'starting_price', 'ending_price', // Added starting_price and ending_price
+        'about_title', 'text_editor', 'call_number', 'whatsapp_number', 'mail_id', 'room_price', 'cover_image'
     ];
 
     // Auto-generate slug from name
@@ -22,6 +23,12 @@ class Vendor extends Model
         static::creating(function ($vendor) {
             $vendor->slug = Str::slug($vendor->name);
         });
+    }
+
+    // Relationship with Category
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 
     // Relationship with SubCategory

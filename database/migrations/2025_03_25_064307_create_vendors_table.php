@@ -9,15 +9,34 @@ return new class extends Migration {
     {
         Schema::create('vendors', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('slug')->unique(); // Slug field added
-            $table->unsignedBigInteger('sub_category_id'); // Foreign key removed
-            $table->boolean('non_veg')->default(false);
-            $table->boolean('veg')->default(true);
-            $table->decimal('starting_price', 10, 2); // Decimal value for price
-            $table->string('contact')->unique();
-            $table->string('mail')->unique();
-            $table->string('cover_image')->nullable();
+            $table->string('name')->unique(); // Name field with unique constraint
+            $table->string('slug')->unique(); // Slug field
+
+            $table->text('address'); // Address field
+            $table->string('state'); // State field
+            $table->string('city'); // City field
+            $table->string('country'); // Country field
+
+            $table->unsignedBigInteger('category_id'); // Category ID
+            $table->unsignedBigInteger('subcategory_id'); // Subcategory ID
+
+            $table->decimal('veg_price', 10, 2)->nullable(); // Vegetarian price
+            $table->decimal('non_veg_price', 10, 2)->nullable(); // Non-vegetarian price
+            $table->enum('price_type', ['fixed', 'variable']); // Price type (fixed or variable)
+
+            $table->decimal('starting_price', 10, 2)->nullable(); // Starting price
+            $table->decimal('ending_price', 10, 2)->nullable(); // Ending price
+
+            $table->string('about_title'); // About section title
+            $table->text('text_editor'); // Text editor content
+
+            $table->string('call_number')->unique(); // Call number
+            $table->string('whatsapp_number')->unique(); // WhatsApp number
+            $table->string('mail_id')->unique(); // Email ID
+
+            $table->decimal('room_price', 10, 2)->nullable(); // Room price
+
+            $table->string('cover_image')->nullable(); // Cover image
             $table->timestamps();
         });
     }

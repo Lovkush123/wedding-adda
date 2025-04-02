@@ -9,6 +9,7 @@ use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\VendorController;
+use App\Http\Controllers\FeatureController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/users', [UserController::class, 'index']); // Get all users
@@ -101,16 +102,35 @@ Route::put('/subcategories/{subcategory}', [SubCategoryController::class, 'updat
 // Delete a subcategory by ID
 Route::delete('/subcategories/{subcategory}', [SubCategoryController::class, 'destroy']);
 
+// Fetch all categories, subcategories, and vendors
+Route::get('/vendors/all-data', [VendorController::class, 'getAllData']);
+
+// List all vendors
 Route::get('/vendors', [VendorController::class, 'index']);
 
-// Create a new vendor
-Route::post('/vendors', [VendorController::class, 'store']);
-
-// Show single vendor by ID
+// Show single vendor
 Route::get('/vendors/{id}', [VendorController::class, 'show']);
+
+// Store a new vendor
+Route::post('/vendors', [VendorController::class, 'store']);
 
 // Update an existing vendor
 Route::put('/vendors/{id}', [VendorController::class, 'update']);
 
 // Delete a vendor
 Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
+
+// Get all features
+Route::get('/features', [FeatureController::class, 'index']);
+
+// Create a new feature
+Route::post('/features', [FeatureController::class, 'store']);
+
+// Get a single feature by ID
+Route::get('/features/{id}', [FeatureController::class, 'show']);
+
+// Update a feature by ID
+Route::put('/features/{id}', [FeatureController::class, 'update']);
+
+// Delete a feature by ID
+Route::delete('/features/{id}', [FeatureController::class, 'destroy']);

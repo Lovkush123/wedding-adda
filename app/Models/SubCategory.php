@@ -21,4 +21,12 @@ class SubCategory extends Model
             $subcategory->slug = Str::slug($subcategory->name);
         });
     }
+
+     /**
+     * Get the category that owns the subcategory.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
