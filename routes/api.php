@@ -9,6 +9,7 @@ use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\VendorController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\FeatureController;
 use Illuminate\Support\Facades\Route;
 
@@ -134,3 +135,8 @@ Route::put('/features/{id}', [FeatureController::class, 'update']);
 
 // Delete a feature by ID
 Route::delete('/features/{id}', [FeatureController::class, 'destroy']);
+
+Route::get('/images', [ImageController::class, 'index']); // Get all images
+Route::post('/images', [ImageController::class, 'store']); // Upload an image
+Route::get('/images/{id}', [ImageController::class, 'show']); // Get a specific image
+Route::delete('/images/{id}', [ImageController::class, 'destroy']); // Delete an image
