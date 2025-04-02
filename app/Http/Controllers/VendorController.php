@@ -76,31 +76,103 @@ class VendorController extends Controller
     //         ], 422));
     //     }
     // }
-    public function store(Request $request)
-{
-    try {
-        $data = $request->all();
+//     public function store(Request $request)
+// {
+//     try {
+//         $data = $request->all();
 
-        // Handle image upload
-        if ($request->hasFile('cover_image')) {
-            $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
-            $data['cover_image'] = $imagePath;
-        }
+//         // Handle image upload
+//         if ($request->hasFile('cover_image')) {
+//             $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
+//             $data['cover_image'] = $imagePath;
+//         }
 
-        // Create vendor
-        $vendor = Vendor::create($data);
+//         // Create vendor
+//         $vendor = Vendor::create($data);
 
-        return response()->json([
-            'message' => 'Vendor created successfully',
-            'vendor' => $vendor
-        ], 201);
-    } catch (Exception $e) {
-        return response()->json([
-            'message' => 'An error occurred',
-            'error' => $e->getMessage(),
-        ], 500);
-    }
-}
+//         return response()->json([
+//             'message' => 'Vendor created successfully',
+//             'vendor' => $vendor
+//         ], 201);
+//     } catch (Exception $e) {
+//         return response()->json([
+//             'message' => 'An error occurred',
+//             'error' => $e->getMessage(),
+//         ], 500);
+//     }
+// }
+ // Store a new vendor with related data
+ public function store(Request $request)
+ {
+     try {
+         $validated = $request->validate([
+             'name' => 'required|string|max:255',
+             'category_id' => 'required|exists:categories,id',
+             'subcategory_id' => 'required|exists:sub_categories,id',
+             'address1' => 'required|string|max:255',
+             'address2' => 'nullable|string|max:255',
+             'map_url' => 'nullable|string|max:255',
+             'state' => 'required|string|max:255',
+             'city' => 'required|string|max:255',
+             'country' => 'required|string|max:255',
+             'price_type' => 'nullable|in:fixed,variable',
+             'starting_price' => 'nullable|numeric|min:0',
+             'ending_price' => 'nullable|numeric|min:0',
+             'about_title' => 'nullable|string|max:255',
+             'text_editor' => 'nullable|string',
+             'call_number' => 'required|string|unique:vendors',
+             'whatsapp_number' => 'nullable|string|unique:vendors',
+             'mail_id' => 'required|email|unique:vendors',
+             'cover_image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+         ]);
+
+         if ($request->hasFile('cover_image')) {
+             $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
+             $validated['cover_image'] = $imagePath;
+         }
+
+         $vendor = Vendor::create($validated);
+
+         if ($request->hasFile('images')) {
+             foreach ($request->file('images') as $image) {
+                 $imagePath = $image->store('vendor_images', 'public');
+                 Image::create(['vendor_id' => $vendor->id, 'image' => $imagePath]);
+             }
+         }
+
+         if ($request->has('features')) {
+             foreach ($request->input('features') as $feature) {
+                 Feature::create([
+                     'vendor_id' => $vendor->id,
+                     'title' => $feature['title'],
+                     'description' => $feature['description'],
+                 ]);
+             }
+         }
+
+         if ($request->has('pricing')) {
+             foreach ($request->input('pricing') as $price) {
+                 Pricing::create([
+                     'vendor_id' => $vendor->id,
+                     'price_name' => $price['price_name'],
+                     'price_type' => $price['price_type'],
+                     'price_category' => $price['price_category'],
+                     'price' => $price['price'],
+                 ]);
+             }
+         }
+
+         return response()->json([
+             'message' => 'Vendor and related data created successfully',
+             'vendor' => $vendor
+         ], 201);
+     } catch (ValidationException $e) {
+         throw new HttpResponseException(response()->json([
+             'message' => 'Validation failed',
+             'errors' => $e->errors(),
+         ], 422));
+     }
+ }
 
 
     // Show single vendor
