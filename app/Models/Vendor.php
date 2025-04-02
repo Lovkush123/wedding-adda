@@ -11,9 +11,9 @@ class Vendor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'category_id', 'subcategory_id', 'address', 'state', 'city', 'country', 
-        'veg_price', 'non_veg_price', 'price_type', 'starting_price', 'ending_price', // Added starting_price and ending_price
-        'about_title', 'text_editor', 'call_number', 'whatsapp_number', 'mail_id', 'room_price', 'cover_image'
+        'name', 'slug', 'category_id', 'subcategory_id', 'address1', 'address2', 'map_url', 'state', 'city', 'country', 
+        'price_type', 'starting_price', 'ending_price', 'about_title', 'text_editor', 
+        'call_number', 'whatsapp_number', 'mail_id', 'cover_image'
     ];
 
     // Auto-generate slug from name
