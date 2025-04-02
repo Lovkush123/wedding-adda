@@ -21,11 +21,10 @@ class PricingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'vender_id' => 'required|integer',
             'price_name' => 'required|string',
             'price_type' => 'required|string',
             'price_category' => 'required|string',
-            'price' => 'required|numeric',
+            'price' => 'required|numeric|min:0',
         ]);
 
         $pricing = Pricing::create($request->all());
@@ -36,22 +35,24 @@ class PricingController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Pricing $pricing)
+    public function show($id)
     {
+        $pricing = Pricing::findOrFail($id);
         return response()->json($pricing);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Pricing $pricing)
+    public function update(Request $request, $id)
     {
+        $pricing = Pricing::findOrFail($id);
+
         $request->validate([
-            'vender_id' => 'integer',
             'price_name' => 'string',
             'price_type' => 'string',
             'price_category' => 'string',
-            'price' => 'numeric',
+            'price' => 'numeric|min:0',
         ]);
 
         $pricing->update($request->all());
@@ -62,10 +63,9 @@ class PricingController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Pricing $pricing)
+    public function destroy($id)
     {
-        $pricing->delete();
-
+        Pricing::findOrFail($id)->delete();
         return response()->json(['message' => 'Pricing deleted successfully']);
     }
 }

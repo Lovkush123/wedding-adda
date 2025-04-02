@@ -7,61 +7,65 @@ use Illuminate\Http\Request;
 
 class EnquiryController extends Controller
 {
-    /**
-     * Display a listing of the enquiries.
-     */
-    public function index()
-    {
-        $enquiries = Enquiry::all();
-        return response()->json($enquiries);
-    }
-
-    /**
-     * Store a newly created enquiry in storage.
-     */
+    // Store a new enquiry
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'number' => 'required|string|max:20',
-            'email' => 'required|email|max:255',
-            'description' => 'nullable|string',
+            'email' => 'required|email|unique:enquiries',
+            'description' => 'required|string',
         ]);
 
         $enquiry = Enquiry::create($request->all());
-        return response()->json($enquiry, 201);
+
+        return response()->json(['message' => 'Enquiry submitted successfully', 'enquiry' => $enquiry], 201);
     }
 
-    /**
-     * Display the specified enquiry.
-     */
-    public function show(Enquiry $enquiry)
+    // Get all enquiries
+    public function index()
     {
+        return response()->json(Enquiry::all());
+    }
+
+    // Get a single enquiry
+    public function show($id)
+    {
+        $enquiry = Enquiry::find($id);
+
+        if (!$enquiry) {
+            return response()->json(['message' => 'Enquiry not found'], 404);
+        }
+
         return response()->json($enquiry);
     }
 
-    /**
-     * Update the specified enquiry in storage.
-     */
-    public function update(Request $request, Enquiry $enquiry)
+    // Update an enquiry
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'number' => 'sometimes|required|string|max:20',
-            'email' => 'sometimes|required|email|max:255',
-            'description' => 'nullable|string',
-        ]);
+        $enquiry = Enquiry::find($id);
+
+        if (!$enquiry) {
+            return response()->json(['message' => 'Enquiry not found'], 404);
+        }
 
         $enquiry->update($request->all());
-        return response()->json($enquiry);
+
+        return response()->json(['message' => 'Enquiry updated successfully', 'enquiry' => $enquiry]);
     }
 
-    /**
-     * Remove the specified enquiry from storage.
-     */
-    public function destroy(Enquiry $enquiry)
+    // Delete an enquiry
+    public function destroy($id)
     {
+        $enquiry = Enquiry::find($id);
+
+        if (!$enquiry) {
+            return response()->json(['message' => 'Enquiry not found'], 404);
+        }
+
         $enquiry->delete();
+
         return response()->json(['message' => 'Enquiry deleted successfully']);
     }
 }
+

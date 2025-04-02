@@ -11,6 +11,7 @@ use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\PricingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/users', [UserController::class, 'index']); // Get all users
@@ -51,20 +52,20 @@ Route::put('/gallery/{gallery}', [GalleryController::class, 'update']);
 Route::delete('/gallery/{gallery}', [GalleryController::class, 'destroy']);
 
 
+// Create an enquiry
+Route::post('/enquiries', [EnquiryController::class, 'store']);
+
 // Get all enquiries
 Route::get('/enquiries', [EnquiryController::class, 'index']);
 
-// Create a new enquiry
-Route::post('/enquiries', [EnquiryController::class, 'store']);
-
 // Get a single enquiry
-Route::get('/enquiries/{enquiry}', [EnquiryController::class, 'show']);
+Route::get('/enquiries/{id}', [EnquiryController::class, 'show']);
 
 // Update an enquiry
-Route::put('/enquiries/{enquiry}', [EnquiryController::class, 'update']);
+Route::put('/enquiries/{id}', [EnquiryController::class, 'update']);
 
 // Delete an enquiry
-Route::delete('/enquiries/{enquiry}', [EnquiryController::class, 'destroy']);
+Route::delete('/enquiries/{id}', [EnquiryController::class, 'destroy']);
 
 
 
@@ -141,3 +142,9 @@ Route::get('/images', [ImageController::class, 'index']); // Get all images
 Route::post('/images', [ImageController::class, 'store']); // Upload an image
 Route::get('/images/{id}', [ImageController::class, 'show']); // Get a specific image
 Route::delete('/images/{id}', [ImageController::class, 'destroy']); // Delete an image
+
+Route::get('/pricing', [PricingController::class, 'index']);      // Get all pricing records
+Route::post('/pricing', [PricingController::class, 'store']);     // Create a new pricing record
+Route::get('/pricing/{id}', [PricingController::class, 'show']);  // Get a specific pricing record
+Route::put('/pricing/{id}', [PricingController::class, 'update']); // Update an existing pricing record
+Route::delete('/pricing/{id}', [PricingController::class, 'destroy']); // Delete a pricing record
