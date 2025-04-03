@@ -22,7 +22,18 @@ class VendorController extends Controller
     public function fetchVendorDetails($id = null)
     {
         if ($id) {
-            $vendor = Vendor::with(['images', 'features', 'pricing'])->find($id);
+            $vendor = Vendor::with([
+                'images' => function ($query) use ($id) {
+                    $query->where('vendor_id', $id);
+                },
+                'features' => function ($query) use ($id) {
+                    $query->where('vendor_id', $id);
+                },
+                'pricing' => function ($query) use ($id) {
+                    $query->where('vendor_id', $id);
+                }
+            ])->find($id);
+            
             if (!$vendor) {
                 return response()->json(['message' => 'Vendor not found'], 404);
             }
