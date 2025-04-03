@@ -108,14 +108,11 @@ Route::delete('/subcategories/{subcategory}', [SubCategoryController::class, 'de
 // Fetch all categories, subcategories, and vendors
 Route::get('/vendors/all-data', [VendorController::class, 'getAllData']);
 
-// Get all vendors
-// Route::get('/vendors', [VendorController::class, 'index']);
+// Fetch all vendors or a single vendor by ID
+Route::get('/vendors/{id?}', [VendorController::class, 'fetchVendorDetails']);
 
 // Create a new vendor
 Route::post('/vendors', [VendorController::class, 'store']);
-
-// Get a single vendor by ID
-Route::get('/vendors/{id}', [VendorController::class, 'fetchVendorDetails']);
 
 // Update a vendor by ID
 Route::put('/vendors/{id}', [VendorController::class, 'update']);

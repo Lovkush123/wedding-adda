@@ -22,25 +22,41 @@ class VendorController extends Controller
     public function fetchVendorDetails($id = null)
     {
         if ($id) {
-            $vendor = Vendor::with([
-                'images' => function ($query) use ($id) {
-                    $query->where('vendor_id', $id);
-                },
-                'features' => function ($query) use ($id) {
-                    $query->where('vendor_id', $id);
-                },
-                'pricing' => function ($query) use ($id) {
-                    $query->where('vendor_id', $id);
-                }
-            ])->find($id);
+            $vendor = Vendor::with(['images', 'features', 'pricing'])->find($id);
             
             if (!$vendor) {
                 return response()->json(['message' => 'Vendor not found'], 404);
             }
-            return response()->json($vendor);
+
+            return response()->json([
+                'vendor' => [
+                    'details' => $vendor,
+                    'images' => $vendor->images,
+                    'features' => $vendor->features,
+                    'pricing' => $vendor->pricing,
+                ]
+            ]);
         }
         
-        return response()->json(Vendor::with(['images', 'features', 'pricing'])->get());
+        $vendors = Vendor::with(['images', 'features', 'pricing'])->get();
+        $formattedVendors = $vendors->map(function ($vendor) {
+            return [
+                'vendor' => [
+                    'details' => $vendor,
+                    'images' => $vendor->images,
+                    'features' => $vendor->features,
+                    'pricing' => $vendor->pricing,
+                ]
+            ];
+        });
+
+        return response()->json($formattedVendors);
+    }
+
+    // Show a single vendor or all vendors
+    public function show($id = null)
+    {
+        return $this->fetchVendorDetails($id);
     }
     // Fetch all categories, subcategories, and vendors
     public function getAllData()
@@ -172,12 +188,7 @@ public function store(Request $request)
     }
 }
 
-    // Show single vendor
-    public function show($id)
-    {
-        $vendor = Vendor::findOrFail($id);
-        return response()->json($vendor);
-    }
+   
 
     // Update vendor with image handling
     public function update(Request $request, $id)
