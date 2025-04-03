@@ -36,4 +36,8 @@ class Vendor extends Model
     {
         return $this->belongsTo(SubCategory::class);
     }
+    public function images(): HasMany
+    {
+        return $this->hasMany(Image::class, 'vendor_id');
+    }
 }
