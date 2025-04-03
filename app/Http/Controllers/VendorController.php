@@ -231,7 +231,7 @@ public function store(Request $request)
             'features.*.description' => 'required_with:features|string',
             'pricing' => 'nullable|array',
             'pricing.*.price_name' => 'required_with:pricing|string|max:255',
-            'pricing.*.price_type' => 'required_with:pricing|in:fixed,variable',
+            'pricing.*.price_type' => 'required_with:pricing|in:package,variable',
             'pricing.*.price_category' => 'required_with:pricing|string|max:255',
             'pricing.*.price' => 'required_with:pricing|numeric|min:0',
         ]);
