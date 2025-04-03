@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class Vendor extends Model
@@ -18,7 +19,7 @@ class Vendor extends Model
     ];
 
     // Auto-generate slug from name
-    public static function boot()
+    protected static function boot()
     {
         parent::boot();
         static::creating(function ($vendor) {
@@ -27,16 +28,18 @@ class Vendor extends Model
     }
 
     // Relationship with Category
-    public function category()
+    public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     // Relationship with SubCategory
-    public function subCategory()
+    public function subCategory(): BelongsTo
     {
-        return $this->belongsTo(SubCategory::class);
+        return $this->belongsTo(SubCategory::class, 'subcategory_id');
     }
+
+    // Relationship with Images
     public function images(): HasMany
     {
         return $this->hasMany(Image::class, 'vendor_id');
