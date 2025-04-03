@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 class CategoryController extends Controller
 {
     // Display a listing of categories
-    private $baseUrl = 'https://api.weddingzadda.com/storage/';
+    private $baseUrl = 'https://api.weddingzadda.com/api/storage/';
 
     // Display a listing of categories
     public function index()
