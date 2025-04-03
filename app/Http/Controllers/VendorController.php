@@ -17,82 +17,48 @@ use Illuminate\Validation\ValidationException;
 
 class VendorController extends Controller
 {
-    public function fetchVendorDetails($id = null)
-{
-    $vendorsQuery = Vendor::with(['images', 'features', 'pricing']);
-    
-    if ($id) {
-        $vendor = $vendorsQuery->find($id);
-        
-        if (!$vendor) {
-            return response()->json(['message' => 'Vendor not found'], 404);
-        }
+ 
 
-        return response()->json(['vendor' => $this->formatVendor($vendor)]);
+    // Fetch vendor details including features, images, and pricing
+    public function fetchVendorDetails($id = null)
+    {
+        if ($id) {
+            $vendor = Vendor::with(['images', 'features', 'pricing'])->find($id);
+            
+            if (!$vendor) {
+                return response()->json(['message' => 'Vendor not found'], 404);
+            }
+
+            return response()->json([
+                'vendor' => [
+                    'details' => $vendor,
+                    'images' => $vendor->images,
+                    'features' => $vendor->features,
+                    'pricing' => $vendor->pricing,
+                ]
+            ]);
+        }
+        
+        $vendors = Vendor::with(['images', 'features', 'pricing'])->get();
+        $formattedVendors = $vendors->map(function ($vendor) {
+            return [
+                'vendor' => [
+                    'details' => $vendor,
+                    'images' => $vendor->images,
+                    'features' => $vendor->features,
+                    'pricing' => $vendor->pricing,
+                ]
+            ];
+        });
+
+        return response()->json($formattedVendors);
     }
 
-    $vendors = $vendorsQuery->get();
-    return response()->json(['vendors' => $vendors->map(fn($vendor) => $this->formatVendor($vendor))]);
-}
-
-private function formatVendor($vendor)
-{
-    return [
-        'id' => $vendor->id,
-        'name' => $vendor->name,
-        'details' => $vendor,
-        'images' => $vendor->images,
-        'features' => $vendor->features,
-        'pricing' => $vendor->pricing,
-    ];
-}
-
-public function show($id = null)
-{
-    return $this->fetchVendorDetails($id);
-}
-
-
-    // // Fetch vendor details including features, images, and pricing
-    // public function fetchVendorDetails($id = null)
-    // {
-    //     if ($id) {
-    //         $vendor = Vendor::with(['images', 'features', 'pricing'])->find($id);
-            
-    //         if (!$vendor) {
-    //             return response()->json(['message' => 'Vendor not found'], 404);
-    //         }
-
-    //         return response()->json([
-    //             'vendor' => [
-    //                 'details' => $vendor,
-    //                 'images' => $vendor->images,
-    //                 'features' => $vendor->features,
-    //                 'pricing' => $vendor->pricing,
-    //             ]
-    //         ]);
-    //     }
-        
-    //     $vendors = Vendor::with(['images', 'features', 'pricing'])->get();
-    //     $formattedVendors = $vendors->map(function ($vendor) {
-    //         return [
-    //             'vendor' => [
-    //                 'details' => $vendor,
-    //                 'images' => $vendor->images,
-    //                 'features' => $vendor->features,
-    //                 'pricing' => $vendor->pricing,
-    //             ]
-    //         ];
-    //     });
-
-    //     return response()->json($formattedVendors);
-    // }
-
-    // // Show a single vendor or all vendors
-    // public function show($id = null)
-    // {
-    //     return $this->fetchVendorDetails($id);
-    // }
+    // Show a single vendor or all vendors
+    public function show($id = null)
+    {
+        return $this->fetchVendorDetails($id);
+    }
     // Fetch all categories, subcategories, and vendors
     public function getAllData()
     {
