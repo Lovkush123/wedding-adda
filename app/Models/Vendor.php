@@ -50,4 +50,8 @@ class Vendor extends Model
     {
         return $this->hasMany(Feature::class, 'vendor_id');
     }
+    public function pricing(): HasMany
+{
+    return $this->hasMany(Pricing::class, 'vendor_id');
+}
 }
