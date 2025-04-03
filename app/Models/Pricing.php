@@ -12,6 +12,7 @@ class Pricing extends Model
     protected $table = 'pricing'; // Table name
 
     protected $fillable = [
+        'vendor_id', // Keeping vendor_id without foreign key
         'price_name',
         'price_type',
         'price_category',

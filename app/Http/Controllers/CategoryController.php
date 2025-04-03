@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Log; 
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -55,27 +55,47 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'nullable|string',
-            'service_id' => 'required|integer',
+            'service_id' => 'sometimes|required|integer',
         ]);
-
+    
         $category = Category::findOrFail($id);
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->name);
-
+    
+        if ($request->has('name')) {
+            $category->name = $request->name;
+            $category->slug = Str::slug($request->name);
+        }
+    
+        if ($request->has('description')) {
+            $category->description = $request->description;
+        }
+    
+        if ($request->has('service_id')) {
+            $category->service_id = $request->service_id;
+        }
+    
         if ($request->hasFile('image')) {
+            // Delete old image if exists
             if ($category->image) {
                 Storage::disk('public')->delete($category->image);
             }
+            
+            // Store new image
             $path = $request->file('image')->store('categories', 'public');
-            $data['image'] = $path;
+            $category->image = $path;
         }
-
-        $category->update($data);
-        return response()->json($category);
+    
+        $category->save();
+    
+        return response()->json($category, 200);
     }
+    
+    
+
+    
+    
 
     // Remove the specified category
     public function destroy($id)

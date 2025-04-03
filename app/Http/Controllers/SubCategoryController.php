@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SubCategory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
+use App\Models\SubCategory;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log; // For Debugging
+
 
 class SubCategoryController extends Controller
 {
@@ -61,30 +64,52 @@ class SubCategoryController extends Controller
         return response()->json($subcategory);
     }
 
-    // Update the specified resource in storage
-    public function update(Request $request, SubCategory $subcategory)
+       public function update(Request $request, SubCategory $subcategory)
     {
-        $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'description' => 'nullable|string',
-        ]);
+        try {
+            // Validate request data
+            $validatedData = $request->validate([
+                'category_id' => 'sometimes|required|integer|exists:categories,id',
+                'name' => 'sometimes|required|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'description' => 'nullable|string',
+            ]);
 
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->name);
-
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($subcategory->image) {
-                Storage::disk('public')->delete($subcategory->image);
+            // Generate slug if name is provided
+            if ($request->has('name')) {
+                $validatedData['slug'] = Str::slug($request->name);
             }
-            $data['image'] = $request->file('image')->store('subcategories', 'public');
-        }
 
-        $subcategory->update($data);
-        return response()->json($subcategory);
+            // Handle image upload if a new image is present
+            if ($request->hasFile('image')) {
+                // Delete the old image if it exists
+                if ($subcategory->image) {
+                    Storage::disk('public')->delete($subcategory->image);
+                }
+                $path = $request->file('image')->store('subcategories', 'public');
+                $validatedData['image'] = $path;
+            }
+
+            // Update the subcategory
+            $subcategory->update($validatedData);
+
+            // Return JSON response
+            return response()->json([
+                'message' => 'Subcategory updated successfully',
+                'subcategory' => $subcategory
+            ]);
+
+        } catch (ValidationException $e) {
+            // Ensure validation errors return JSON
+            throw new HttpResponseException(response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422));
+        }
     }
+       
+    
+    
 
     // Remove the specified resource from storage
     public function destroy(SubCategory $subcategory)

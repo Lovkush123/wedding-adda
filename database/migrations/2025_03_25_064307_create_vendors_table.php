@@ -19,9 +19,8 @@ return new class extends Migration {
             $table->string('country'); // Country field
             $table->unsignedBigInteger('category_id'); // Category ID
             $table->unsignedBigInteger('subcategory_id'); // Subcategory ID
-            $table->enum('price_type', ['fixed', 'variable']); // Price type (fixed or variable)
-            $table->decimal('starting_price', 10, 2)->nullable(); // Starting price
-            $table->decimal('ending_price', 10, 2)->nullable(); // Ending price
+            $table->string('based_area'); // Based Area field
+            $table->text('short_description'); // Short description field
             $table->string('about_title'); // About section title
             $table->text('text_editor'); // Text editor content
             $table->string('call_number')->unique(); // Call number

@@ -12,7 +12,7 @@ class Vendor extends Model
 
     protected $fillable = [
         'name', 'slug', 'category_id', 'subcategory_id', 'address1', 'address2', 'map_url', 'state', 'city', 'country', 
-        'price_type', 'starting_price', 'ending_price', 'about_title', 'text_editor', 
+        'based_area', 'short_description', 'about_title', 'text_editor', 
         'call_number', 'whatsapp_number', 'mail_id', 'cover_image'
     ];
 
