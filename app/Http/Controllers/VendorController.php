@@ -41,14 +41,14 @@ class VendorController extends Controller
            
            $vendors = Vendor::with(['images', 'features', 'pricing'])->get();
            $formattedVendors = $vendors->map(function ($vendor) {
-               return [
-                   'vendor' => [
-                       'details' => $vendor,
-                       'images' => $vendor->images,
-                       'features' => $vendor->features,
-                       'pricing' => $vendor->pricing,
-                   ]
-               ];
+            //    return [
+            //        'vendor' => [
+            //            'details' => $vendor,
+            //            'images' => $vendor->images,
+            //            'features' => $vendor->features,
+            //            'pricing' => $vendor->pricing,
+            //        ]
+            //    ];
            });
    
            return response()->json($formattedVendors);
