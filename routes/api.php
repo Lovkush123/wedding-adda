@@ -109,7 +109,7 @@ Route::delete('/subcategories/{subcategory}', [SubCategoryController::class, 'de
 Route::get('/vendors/all-data', [VendorController::class, 'getAllData']);
 
 // Get all vendors
-Route::get('/vendors', [VendorController::class, 'index']);
+// Route::get('/vendors', [VendorController::class, 'index']);
 
 // Create a new vendor
 Route::post('/vendors', [VendorController::class, 'store']);
