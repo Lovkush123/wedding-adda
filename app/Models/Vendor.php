@@ -44,4 +44,10 @@ class Vendor extends Model
     {
         return $this->hasMany(Image::class, 'vendor_id');
     }
+
+    // ✅ New: Relationship with Features
+    public function features(): HasMany
+    {
+        return $this->hasMany(Feature::class, 'vendor_id');
+    }
 }
