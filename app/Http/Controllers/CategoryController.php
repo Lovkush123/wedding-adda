@@ -10,9 +10,15 @@ use Illuminate\Support\Str;
 class CategoryController extends Controller
 {
     // Display a listing of categories
+    private $baseUrl = 'https://api.weddingzadda.com/storage/';
+
+    // Display a listing of categories
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::all()->map(function ($category) {
+            $category->image = $category->image ? $this->baseUrl . $category->image : null;
+            return $category;
+        });
         return response()->json($categories);
     }
 

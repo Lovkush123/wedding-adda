@@ -16,7 +16,7 @@ class VendorController extends Controller
     public function getAllData()
     {
         $categories = Category::with('subCategories')->get();
-        $vendors = Vendor::with(['subCategory', 'category'])->get();
+        $vendors = Vendor::with(['subCategory', 'category', 'images', 'features', 'pricing'])->get();
 
         return response()->json([
             'categories' => $categories,
