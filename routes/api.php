@@ -115,7 +115,7 @@ Route::get('/vendors', [VendorController::class, 'index']);
 Route::post('/vendors', [VendorController::class, 'store']);
 
 // Get a single vendor by ID
-Route::get('/vendors/{id}', [VendorController::class, 'show']);
+Route::get('/vendors/{id}', [VendorController::class, 'fetchVendorDetails']);
 
 // Update a vendor by ID
 Route::put('/vendors/{id}', [VendorController::class, 'update']);
