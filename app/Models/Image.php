@@ -2,17 +2,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Vendor extends Model
+class Image extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'email', 'phone']; // Adjust as needed
+    protected $fillable = ['image', 'vendor_id']; // Define fillable fields
 
-    // Define relationship to Image model
-    public function images(): HasMany
+    // Define relationship to Vendor model
+    public function vendor(): BelongsTo
     {
-        return $this->hasMany(Image::class, 'vendor_id');
+        return $this->belongsTo(Vendor::class, 'vendor_id');
     }
 }
