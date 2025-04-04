@@ -62,7 +62,7 @@ class CategoryController extends Controller
         return response()->json($category, 201);
     }
 
-    public function fetchbycity()
+    public function show()
 {
     $categories = Category::with(['vendors'])->get()->map(function ($category) {
         return [
@@ -78,11 +78,11 @@ class CategoryController extends Controller
     return response()->json($categories);
 }
     // Display the specified category
-    public function show($id)
-    {
-        $category = Category::findOrFail($id);
-        return response()->json($category);
-    }
+    // public function show($id)
+    // {
+    //     $category = Category::findOrFail($id);
+    //     return response()->json($category);
+    // }
 
     // Update the specified category
     public function update(Request $request, $id)
