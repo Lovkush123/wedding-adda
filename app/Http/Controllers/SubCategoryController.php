@@ -29,9 +29,11 @@ class SubCategoryController extends Controller
     // }
     public function index()
     {
-        $subcategories = SubCategory::all()->map(function ($subcategory) {
+        $baseUrl = config('app.url');
+
+        $subcategories = SubCategory::all()->map(function ($subcategory) use ($baseUrl) {
             if ($subcategory->image) {
-                $subcategory->image_url = Storage::disk('public')->url($subcategory->image);
+                $subcategory->image_url = $baseUrl . Storage::url($subcategory->image);
             } else {
                 $subcategory->image_url = null;
             }
