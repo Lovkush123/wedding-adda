@@ -62,6 +62,21 @@ class CategoryController extends Controller
         return response()->json($category, 201);
     }
 
+    public function fetchbycity()
+{
+    $categories = Category::with(['vendors'])->get()->map(function ($category) {
+        return [
+            'category' => $category->name,
+            'vendors' => $category->vendors->map(function ($vendor) {
+                return [
+                    'city' => $vendor->city
+                ];
+            }),
+        ];
+    });
+
+    return response()->json($categories);
+}
     // Display the specified category
     public function show($id)
     {
