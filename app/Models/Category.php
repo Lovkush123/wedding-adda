@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-
+use App\Models\SubCategory;
 class Category extends Model
 {
     use HasFactory;
@@ -24,7 +24,7 @@ class Category extends Model
 
     public function subcategories()
     {
-        return $this->hasMany(Subcategory::class);
+        return $this->hasMany(SubCategory::class); // ✅ Use correct class name
     }
     
 }
