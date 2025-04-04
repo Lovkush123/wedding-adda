@@ -13,32 +13,32 @@ class CategoryController extends Controller
     private $baseUrl = 'https://api.weddingzadda.com/storage/';
 
     // Display a listing of categories
+    // public function index()
+    // {
+    //     $categories = Category::all()->map(function ($category) {
+    //         $category->image = $category->image ? $this->baseUrl . $category->image : null;
+    //         return $category;
+    //     });
+    //     return response()->json($categories);
+    // }
     public function index()
-    {
-        $categories = Category::all()->map(function ($category) {
-            $category->image = $category->image ? $this->baseUrl . $category->image : null;
-            return $category;
-        });
-        return response()->json($categories);
-    }
-
-    public function fetchall()
     {
         $categories = Category::with('subcategories')->get()->map(function ($category) {
             $category->image = $category->image ? $this->baseUrl . $category->image : null;
-    
-            // Format subcategories
-            $category->subcategories = $category->subcategories->map(function ($sub) {
-                $sub->image = $sub->image ? $this->baseUrl . $sub->image : null;
-                return $sub;
+
+            // Map subcategories if needed
+            $category->subcategories->map(function ($subcategory) {
+                $subcategory->image = $subcategory->image ? $this->baseUrl . $subcategory->image : null;
+                return $subcategory;
             });
-    
+
             return $category;
         });
-    
+
         return response()->json($categories);
     }
 
+    
     // Store a newly created category
     public function store(Request $request)
     {

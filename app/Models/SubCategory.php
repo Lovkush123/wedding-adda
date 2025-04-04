@@ -29,5 +29,5 @@ class SubCategory extends Model
     {
         return $this->belongsTo(Category::class);
     }
-    
+
 }
