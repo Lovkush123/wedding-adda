@@ -71,6 +71,7 @@ Route::delete('/enquiries/{id}', [EnquiryController::class, 'destroy']);
 
 // Get all categories
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categoriesfetch', [CategoryController::class, 'fetchbycity']);
 
 // Create a new category
 Route::post('/categories', [CategoryController::class, 'store']);

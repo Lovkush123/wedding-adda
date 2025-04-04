@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\SubCategory;
+use App\Models\Vendor;
 class Category extends Model
 {
     use HasFactory;
@@ -26,5 +27,9 @@ class Category extends Model
     {
         return $this->hasMany(SubCategory::class); // ✅ Use correct class name
     }
+    public function vendors()
+{
+    return $this->hasMany(Vendor::class, 'category_id');
+}
     
 }
