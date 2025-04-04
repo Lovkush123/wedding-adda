@@ -87,7 +87,7 @@ Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
 
 
-
+Route::get('/subcategoriesfetchAll', [SubCategoryController::class, 'fetchAll']);
 // Get all subcategories
 Route::get('/subcategories', [SubCategoryController::class, 'index']);
 

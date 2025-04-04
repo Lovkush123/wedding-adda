@@ -43,6 +43,28 @@ class SubCategoryController extends Controller
         return response()->json($subcategories);
     }
 
+    public function fetchAll()
+{
+    $baseUrl = 'https://api.weddingzadda.com/storage/';
+
+    $subcategories = SubCategory::with('vendors')->get()->map(function ($subcategory) use ($baseUrl) {
+        return [
+            'name' => $subcategory->name,
+            'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
+            'vendors' => $subcategory->vendors->map(function ($vendor) {
+                return [
+                    'id' => $vendor->id,
+                    'name' => $vendor->name,
+                    'city' => $vendor->city,
+                    'cover_image' => $vendor->cover_image,
+                    // Add more vendor fields if needed
+                ];
+            }),
+        ];
+    });
+
+    return response()->json($subcategories);
+}
     // Store a newly created resource in storage
     public function store(Request $request)
     {

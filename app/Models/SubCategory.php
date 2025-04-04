@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-
+use App\Models\Vendor;
 class SubCategory extends Model
 {
     use HasFactory;
@@ -29,5 +29,8 @@ class SubCategory extends Model
     {
         return $this->belongsTo(Category::class);
     }
-
+    public function vendors()
+    {
+        return $this->hasMany(Vendor::class, 'subcategory_id');
+    }
 }
