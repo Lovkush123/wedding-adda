@@ -76,7 +76,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::post('/categories', [CategoryController::class, 'store']);
 
 // Get a single category by ID
-Route::get('/categories/{id}', [CategoryController::class, 'show']);
+Route::get('/categoriesNEW', [CategoryController::class, 'show']);
 
 // Update a category by ID
 Route::put('/categories/{id}', [CategoryController::class, 'update']);
