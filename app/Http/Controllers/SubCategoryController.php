@@ -29,7 +29,7 @@ class SubCategoryController extends Controller
     // }
     public function index()
     {
-        $baseUrl = config('app.url');
+        $baseUrl = config('https://api.weddingzadda.com/');
 
         $subcategories = SubCategory::all()->map(function ($subcategory) use ($baseUrl) {
             if ($subcategory->image) {
