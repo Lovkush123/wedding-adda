@@ -14,9 +14,30 @@ use Illuminate\Support\Facades\Log; // For Debugging
 class SubCategoryController extends Controller
 {
     // Display a listing of the resource
+    // public function index()
+    // {
+    //     $subcategories = SubCategory::all()->map(function ($subcategory) {
+    //         if ($subcategory->image) {
+    //             $subcategory->image_url = Storage::disk('public')->url($subcategory->image);
+    //         } else {
+    //             $subcategory->image_url = null;
+    //         }
+    //         return $subcategory;
+    //     });
+
+    //     return response()->json($subcategories);
+    // }
     public function index()
     {
-        $subcategories = SubCategory::all();
+        $subcategories = SubCategory::all()->map(function ($subcategory) {
+            if ($subcategory->image) {
+                $subcategory->image_url = Storage::disk('public')->url($subcategory->image);
+            } else {
+                $subcategory->image_url = null;
+            }
+            return $subcategory;
+        });
+
         return response()->json($subcategories);
     }
 
