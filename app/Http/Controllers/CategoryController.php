@@ -22,6 +22,23 @@ class CategoryController extends Controller
         return response()->json($categories);
     }
 
+    public function fetchall()
+    {
+        $categories = Category::with('subcategories')->get()->map(function ($category) {
+            $category->image = $category->image ? $this->baseUrl . $category->image : null;
+    
+            // Format subcategories
+            $category->subcategories = $category->subcategories->map(function ($sub) {
+                $sub->image = $sub->image ? $this->baseUrl . $sub->image : null;
+                return $sub;
+            });
+    
+            return $category;
+        });
+    
+        return response()->json($categories);
+    }
+
     // Store a newly created category
     public function store(Request $request)
     {
