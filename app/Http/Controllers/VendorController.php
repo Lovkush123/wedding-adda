@@ -17,7 +17,25 @@ use Illuminate\Validation\ValidationException;
 
 class VendorController extends Controller
 {
- 
+    private function formatImageUrl($path)
+    {
+        return $path ? asset('storage/' . $path) : null;
+    } 
+    private function transformVendor($vendor)
+    {
+        if ($vendor->cover_image) {
+            $vendor->cover_image = $this->formatImageUrl($vendor->cover_image);
+        }
+
+        if ($vendor->relationLoaded('images')) {
+            $vendor->images->transform(function ($image) {
+                $image->image = $this->formatImageUrl($image->image);
+                return $image;
+            });
+        }
+
+        return $vendor;
+    }
 
     public function fetchVendorDetails($id = null)
     {
