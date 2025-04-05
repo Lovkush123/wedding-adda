@@ -28,13 +28,13 @@ class Vendor extends Model
     }
 
     // Relationship with Category
-    public function category(): BelongsTo
+    public function category(): HasMany
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
     // Relationship with SubCategory
-    public function subCategory(): BelongsTo
+    public function subCategory(): HasMany
     {
         return $this->belongsTo(SubCategory::class, 'subcategory_id');
     }

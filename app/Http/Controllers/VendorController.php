@@ -46,14 +46,28 @@ class VendorController extends Controller
     // Fetch all categories, subcategories, and vendors
     public function getAllData()
     {
-        $categories = Category::with('subCategories')->get();
-        $vendors = Vendor::with(['subCategory', 'category', 'images', 'features', 'pricing'])->get();
-
+        // Fetch all categories with their subcategories and nested vendors + related data
+        $categories = Category::with([
+            'subCategories' => function ($subQuery) {
+                $subQuery->select('id', 'category_id', 'name')
+                    ->with([
+                        'vendors' => function ($vendorQuery) {
+                            $vendorQuery->select('id', 'name', 'category_id', 'sub_category_id', 'description', 'location')
+                                ->with([
+                                    'images:id,vendor_id,path',
+                                    'features:id,vendor_id,title,description',
+                                    'pricing:id,vendor_id,price,description'
+                                ]);
+                        }
+                    ]);
+            }
+        ])->select('id', 'name')->get();
+    
         return response()->json([
-            'categories' => $categories,
-            'vendors' => $vendors,
+            'categories' => $categories
         ]);
     }
+    
 
     // List all vendors
     public function index()
