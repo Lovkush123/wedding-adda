@@ -39,19 +39,7 @@ class Vendor extends Model
         return $this->belongsTo(SubCategory::class, 'subcategory_id');
     }
 
-    // Relationship with Images
-    public function images(): HasMany
-    {
-        return $this->hasMany(Image::class, 'vendor_id');
-    }
-
-    // ✅ New: Relationship with Features
-    public function features(): HasMany
-    {
-        return $this->hasMany(Feature::class, 'vendor_id');
-    }
-    public function pricing(): HasMany
-{
-    return $this->hasMany(Pricing::class, 'vendor_id');
-}
+    public function images() { return $this->hasMany(Image::class); }
+    public function features() { return $this->hasMany(Feature::class); }
+    public function pricing() { return $this->hasMany(Pricing::class); }
 }
