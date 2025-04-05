@@ -54,7 +54,7 @@ class VendorController extends Controller
                         'vendors' => function ($vendorQuery) {
                             $vendorQuery->select('id', 'name', 'category_id', 'subcategory_id')
                                 ->with([
-                                    'images:id,vendor_id,path',
+                                    'images:id,vendor_id',
                                     'features:id,vendor_id,title,description',
                                     'pricing:id,vendor_id,price,description'
                                 ]);
