@@ -106,7 +106,7 @@ Route::delete('/subcategories/{subcategory}', [SubCategoryController::class, 'de
 
 
 // Fetch all categories, subcategories, and vendors
-Route::get('/vendors/all-data', [VendorController::class, 'getAllData']);
+Route::get('/vendorsalldata', [VendorController::class, 'getAllData']);
 
 // Fetch all vendors or a single vendor by ID
 Route::get('/vendors/{id?}', [VendorController::class, 'fetchVendorDetails']);
