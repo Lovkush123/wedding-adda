@@ -52,7 +52,7 @@ class VendorController extends Controller
                 $subQuery->select('id', 'category_id', 'name','slug','image','description',)
                     ->with([
                         'vendors' => function ($vendorQuery) {
-                            $vendorQuery->select('name', 'slug', 'category_id', 'subcategory_id', 'address1', 'address2', 'map_url', 'state', 'city', 'country', 
+                            $vendorQuery->select('id','name', 'slug', 'category_id', 'subcategory_id', 'address1', 'address2', 'map_url', 'state', 'city', 'country', 
         'based_area', 'short_description', 'about_title', 'text_editor', 
         'call_number', 'whatsapp_number', 'mail_id', 'cover_image')
                                 ->with([
