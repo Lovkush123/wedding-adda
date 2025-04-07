@@ -56,7 +56,7 @@ class VendorController extends Controller
                                 ->with([
                                     'images:id,vendor_id,image',
                                     'features:id,vendor_id,title,description',
-                                    'pricing:id,vendor_id,price'
+                                    'pricing:id,vendor_id,price,price_name,price_type,price_category'
                                 ]);
                         }
                     ]);
