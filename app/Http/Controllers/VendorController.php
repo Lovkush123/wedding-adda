@@ -49,10 +49,10 @@ class VendorController extends Controller
         // Fetch all categories with subcategories, and nested vendors + vendor details
         $categories = Category::with([
             'subCategories' => function ($subQuery) {
-                $subQuery->select('id', 'category_id', 'name','slug','image','description')
+                $subQuery->select('id', 'category_id', 'name','slug','image','description',)
                     ->with([
                         'vendors' => function ($vendorQuery) {
-                            $vendorQuery->select('id', 'name', 'category_id', 'subcategory_id','slug', 'image', 'description')
+                            $vendorQuery->select('id', 'name', 'category_id', 'subcategory_id')
                                 ->with([
                                     'images:id,vendor_id,image',
                                     'features:id,vendor_id,title,description',
