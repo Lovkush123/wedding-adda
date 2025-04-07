@@ -69,7 +69,27 @@ class VendorController extends Controller
             'categories' => $categories
         ]);
     }
-    
+    public function getVendorsBySubCategorySlug($slug)
+    {
+        $subCategory = SubCategory::where('slug', $slug)->first();
+
+        if (!$subCategory) {
+            return response()->json(['message' => 'Subcategory not found'], 404);
+        }
+
+        $vendors = Vendor::where('subcategory_id', $subCategory->id)
+            ->with([
+                'images:id,vendor_id,image',
+                'features:id,vendor_id,title,description',
+                'pricing:id,vendor_id,price,price_name,price_type,price_category'
+            ])
+            ->get();
+
+        return response()->json([
+            'subcategory' => $subCategory->only(['id', 'name', 'slug', 'description', 'image']),
+            'vendors' => $vendors
+        ]);
+    }
     
 
     // List all vendors
