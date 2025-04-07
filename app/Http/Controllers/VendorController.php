@@ -91,7 +91,24 @@ class VendorController extends Controller
         ]);
     }
     
+    public function getVendorBySlug($slug)
+    {
+        $vendor = Vendor::where('slug', $slug)
+            ->with([
+                'images:id,vendor_id,image',
+                'features:id,vendor_id,title,description',
+                'pricing:id,vendor_id,price,price_name,price_type,price_category'
+            ])
+            ->first();
 
+        if (!$vendor) {
+            return response()->json(['message' => 'Vendor not found'], 404);
+        }
+
+        return response()->json([
+            'vendor' => $vendor
+        ]);
+    }
     // List all vendors
     public function index()
     {
