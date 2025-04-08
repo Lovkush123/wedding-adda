@@ -27,44 +27,92 @@ class SubCategoryController extends Controller
 
     //     return response()->json($subcategories);
     // }
-    public function index()
-    {
-        $baseUrl = config('https://api.weddingzadda.com/');
+//     public function index()
+//     {
+//         $baseUrl = config('https://api.weddingzadda.com/');
 
-        $subcategories = SubCategory::all()->map(function ($subcategory) use ($baseUrl) {
-            if ($subcategory->image) {
-                $subcategory->image_url = $baseUrl . Storage::url($subcategory->image);
-            } else {
-                $subcategory->image_url = null;
-            }
-            return $subcategory;
-        });
+//         $subcategories = SubCategory::all()->map(function ($subcategory) use ($baseUrl) {
+//             if ($subcategory->image) {
+//                 $subcategory->image_url = $baseUrl . Storage::url($subcategory->image);
+//             } else {
+//                 $subcategory->image_url = null;
+//             }
+//             return $subcategory;
+//         });
 
-        return response()->json($subcategories);
-    }
+//         return response()->json($subcategories);
+//     }
 
-    public function fetchAll()
-{
-    $baseUrl = 'https://api.weddingzadda.com/storage/';
+//     public function fetchAll()
+// {
+//     $baseUrl = 'https://api.weddingzadda.com/storage/';
 
-    $subcategories = SubCategory::with('vendors')->get()->map(function ($subcategory) use ($baseUrl) {
-        return [
-            'name' => $subcategory->name,
-            'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
-            'vendors' => $subcategory->vendors->map(function ($vendor) {
-                return [
-                    'id' => $vendor->id,
-                    'name' => $vendor->name,
-                    'city' => $vendor->city,
-                    'cover_image' => $vendor->cover_image,
-                    // Add more vendor fields if needed
-                ];
-            }),
-        ];
-    });
+//     $subcategories = SubCategory::with('vendors')->get()->map(function ($subcategory) use ($baseUrl) {
+//         return [
+//             'name' => $subcategory->name,
+//             'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
+//             'vendors' => $subcategory->vendors->map(function ($vendor) {
+//                 return [
+//                     'id' => $vendor->id,
+//                     'name' => $vendor->name,
+//                     'city' => $vendor->city,
+//                     'cover_image' => $vendor->cover_image,
+//                     // Add more vendor fields if needed
+//                 ];
+//             }),
+//         ];
+//     });
 
-    return response()->json($subcategories);
-}
+//     return response()->json($subcategories);
+// }
+  // Fetch all subcategories with full image URL
+  public function index()
+  {
+      $baseUrl = 'https://api.weddingzadda.com/storage/';
+
+      $subcategories = SubCategory::with('category')->get()->map(function ($subcategory) use ($baseUrl) {
+          return [
+              'id' => $subcategory->id,
+              'name' => $subcategory->name,
+              'slug' => $subcategory->slug,
+              'description' => $subcategory->description,
+              'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
+              'category' => $subcategory->category ? [
+                  'id' => $subcategory->category->id,
+                  'name' => $subcategory->category->name,
+                  'slug' => $subcategory->category->slug,
+              ] : null,
+          ];
+      });
+
+      return response()->json($subcategories);
+  }
+
+  // Fetch subcategories with vendors
+  public function fetchAll()
+  {
+      $baseUrl = 'https://api.weddingzadda.com/storage/';
+
+      $subcategories = SubCategory::with('vendors')->get()->map(function ($subcategory) use ($baseUrl) {
+          return [
+              'id' => $subcategory->id,
+              'name' => $subcategory->name,
+              'slug' => $subcategory->slug,
+              'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
+              'vendors' => $subcategory->vendors->map(function ($vendor) use ($baseUrl) {
+                  return [
+                      'id' => $vendor->id,
+                      'name' => $vendor->name,
+                      'city' => $vendor->city,
+                      'cover_image' => $vendor->cover_image ? $baseUrl . $vendor->cover_image : null,
+                      // Add more fields if needed
+                  ];
+              }),
+          ];
+      });
+
+      return response()->json($subcategories);
+  }
     // Store a newly created resource in storage
     public function store(Request $request)
     {
