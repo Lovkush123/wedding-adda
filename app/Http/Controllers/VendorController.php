@@ -69,6 +69,41 @@ class VendorController extends Controller
             'categories' => $categories
         ]);
     }
+
+    public function getCategoryDataBySlug($slug)
+    {
+        // Fetch category by slug with nested subcategories and vendor details
+        $category = Category::where('slug', $slug)
+            ->with([
+                'subCategories' => function ($subQuery) {
+                    $subQuery->select('id', 'category_id', 'name', 'slug', 'image', 'description')
+                        ->with([
+                            'vendors' => function ($vendorQuery) {
+                                $vendorQuery->select(
+                                    'id', 'name', 'slug', 'category_id', 'subcategory_id',
+                                    'address1', 'address2', 'map_url', 'state', 'city', 'country',
+                                    'based_area', 'short_description', 'about_title', 'text_editor',
+                                    'call_number', 'whatsapp_number', 'mail_id', 'cover_image'
+                                )
+                                ->with([
+                                    'images:id,vendor_id,image',
+                                    'features:id,vendor_id,title,description',
+                                    'pricing:id,vendor_id,price,price_name,price_type,price_category'
+                                ]);
+                            }
+                        ]);
+                }
+            ])
+            ->select('id', 'name', 'slug', 'image', 'description') // Include any fields you need
+            ->first();
+    
+        if (!$category) {
+            return response()->json(['message' => 'Category not found.'], 404);
+        }
+    
+        return response()->json(['category' => $category]);
+    }
+    
     public function getVendorsBySubCategorySlug($slug)
     {
         $subCategory = SubCategory::where('slug', $slug)->first();

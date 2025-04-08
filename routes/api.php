@@ -104,7 +104,7 @@ Route::put('/subcategories/{subcategory}', [SubCategoryController::class, 'updat
 // Delete a subcategory by ID
 Route::delete('/subcategories/{subcategory}', [SubCategoryController::class, 'destroy']);
 Route::get('/vendor/{slug}', [VendorController::class, 'getVendorBySlug']);
-
+Route::get('/vendor/category/{slug}', [VendorController::class, 'getCategoryDataBySlug']);
 Route::get('/vendors/subcategory/{slug}', [VendorController::class, 'getVendorsBySubCategorySlug']);
 
 // Fetch all categories, subcategories, and vendors
