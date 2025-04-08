@@ -46,7 +46,7 @@ class VendorController extends Controller
     
     public function getAllData()
     {
-        $categories = Category::select('id', 'name')
+        $categories = Category::select('id', 'name', 'slug', 'image', 'description')
             ->with([
                 'subcategories:id,category_id,name,slug,image,description',
                 'subcategories.vendors' => function ($vendorQuery) {
