@@ -21,20 +21,19 @@ class VendorController extends Controller
 
     public function fetchVendorDetails($id = null)
     {
+        $query = Vendor::with(['images:id,vendor_id,image', 'features:id,vendor_id,title,description', 'pricing:id,vendor_id,price,price_name,price_type,price_category']);
+
         if ($id) {
-            $vendor = Vendor::with(['images', 'features', 'pricing'])->find($id);
-    
+            $vendor = $query->find($id);
+
             if (!$vendor) {
                 return response()->json(['message' => 'Vendor not found'], 404);
             }
-    
-            return response()->json([
-                'vendor' => $vendor, // No need to repeat the images, features, and pricing separately
-            ]);
+
+            return response()->json(['vendor' => $vendor]);
         }
-    
-        $vendors = Vendor::with(['images', 'features', 'pricing'])->get();
-    
+
+        $vendors = $query->get();
         return response()->json(['vendors' => $vendors]);
     }
     
@@ -44,30 +43,44 @@ class VendorController extends Controller
         return $this->fetchVendorDetails($id);
     }
     // Fetch all categories, subcategories, and vendors
+    
     public function getAllData()
     {
-        // Fetch all categories with subcategories, and nested vendors + vendor details
-        $categories = Category::with([
-            'subCategories' => function ($subQuery) {
-                $subQuery->select('id', 'category_id', 'name','slug','image','description',)
+        $categories = Category::select('id', 'name')
+            ->with([
+                'subcategories:id,category_id,name,slug,image,description',
+                'subcategories.vendors' => function ($vendorQuery) {
+                    $vendorQuery->select(
+                        'id',
+                        'name',
+                        'slug',
+                        'category_id',
+                        'subcategory_id',
+                        'address1',
+                        'address2',
+                        'map_url',
+                        'state',
+                        'city',
+                        'country',
+                        'based_area',
+                        'short_description',
+                        'about_title',
+                        'text_editor',
+                        'call_number',
+                        'whatsapp_number',
+                        'mail_id',
+                        'cover_image'
+                    )
                     ->with([
-                        'vendors' => function ($vendorQuery) {
-                            $vendorQuery->select('id','name', 'slug', 'category_id', 'subcategory_id', 'address1', 'address2', 'map_url', 'state', 'city', 'country', 
-        'based_area', 'short_description', 'about_title', 'text_editor', 
-        'call_number', 'whatsapp_number', 'mail_id', 'cover_image')
-                                ->with([
-                                    'images:id,vendor_id,image',
-                                    'features:id,vendor_id,title,description',
-                                    'pricing:id,vendor_id,price,price_name,price_type,price_category'
-                                ]);
-                        }
+                        'images:id,vendor_id,image',
+                        'features:id,vendor_id,title,description',
+                        'pricing:id,vendor_id,price,price_name,price_type,price_category'
                     ]);
-            }
-        ])->select('id', 'name')->get();
-    
-        return response()->json([
-            'categories' => $categories
-        ]);
+                }
+            ])
+            ->get();
+
+        return response()->json(['categories' => $categories]);
     }
 
     public function getCategoryDataBySlug($slug)
