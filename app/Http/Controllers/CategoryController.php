@@ -135,50 +135,24 @@ class CategoryController extends Controller
 //   }
 public function update(Request $request, $id)
 {
-    try {
-        $category = Category::findOrFail($id);
+    $category = Category::findOrFail($id);
 
-        // Update only if request has the value
-        if ($request->has('name')) {
-            $category->name = $request->input('name');
-            $category->slug = Str::slug($category->name);
-        }
+    $request->validate([
+        'name' => 'sometimes|required|string|max:255|unique:categories,name,' . $id,
+        'image' => 'nullable|string',
+        'description' => 'nullable|string',
+        'service_id' => 'nullable|integer'
+    ]);
 
-        if ($request->has('description')) {
-            $category->description = $request->input('description');
-        }
+    $category->update([
+        'name' => $request->name ?? $category->name,
+        'slug' => $request->name ? Str::slug($request->name) : $category->slug,
+        'image' => $request->image ?? $category->image,
+        'description' => $request->description ?? $category->description,
+        'service_id' => $request->service_id ?? $category->service_id,
+    ]);
 
-        if ($request->has('service_id')) {
-            $category->service_id = $request->input('service_id');
-        }
-
-        // Handle image update
-        if ($request->hasFile('image')) {
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
-            }
-
-            $path = $request->file('image')->store('categories', 'public');
-            $category->image = $path;
-        }
-
-        $category->save();
-
-        // Reload updated data from DB
-        $category->refresh();
-
-        return response()->json([
-            'status' => 200,
-            'message' => 'Category updated successfully.',
-            'data' => $category,
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'Something went wrong.',
-            'error' => $e->getMessage(),
-        ]);
-    }
+    return response()->json(['message' => 'Category updated successfully.', 'category' => $category]);
 }
 
 
