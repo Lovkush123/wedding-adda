@@ -98,21 +98,22 @@ class CategoryController extends Controller
               ], 404);
           }
   
-          $request->validate([
+          // Validate inputs
+          $validatedData = $request->validate([
               'name' => 'required|string|max:255',
               'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
               'description' => 'nullable|string',
               'service_id' => 'required|integer',
           ]);
   
-          $category->name = $request->input('name');
-          $category->slug = Str::slug($request->input('name'));
-          $category->description = $request->input('description');
-          $category->service_id = $request->input('service_id');
+          // Update fields
+          $category->name = $validatedData['name'];
+          $category->slug = Str::slug($validatedData['name']);
+          $category->description = $validatedData['description'] ?? $category->description;
+          $category->service_id = $validatedData['service_id'];
   
-          // Handle image upload if exists
+          // Handle image upload
           if ($request->hasFile('image')) {
-              // Delete old image if it exists
               if ($category->image && Storage::disk('public')->exists($category->image)) {
                   Storage::disk('public')->delete($category->image);
               }
@@ -123,7 +124,7 @@ class CategoryController extends Controller
   
           $category->save();
   
-          // Return category with full image URL
+          // Append full image URL
           $category->image = $category->image ? $this->baseUrl . $category->image : null;
   
           return response()->json([
@@ -131,6 +132,13 @@ class CategoryController extends Controller
               'message' => 'Category updated successfully.',
               'data' => $category
           ], 200);
+  
+      } catch (\Illuminate\Validation\ValidationException $e) {
+          return response()->json([
+              'status' => 422,
+              'message' => 'Validation failed.',
+              'errors' => $e->errors(), // returns detailed validation errors
+          ], 422);
       } catch (\Exception $e) {
           Log::error('Category update error: ' . $e->getMessage());
   
@@ -141,6 +149,7 @@ class CategoryController extends Controller
           ], 500);
       }
   }
+  
   
     
 
