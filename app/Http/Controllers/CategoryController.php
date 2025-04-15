@@ -138,49 +138,30 @@ public function update(Request $request, $id)
     try {
         $category = Category::findOrFail($id);
 
-        // Check and update name
-        if ($request->has('name') && $request->input('name') !== $category->name) {
-            $category->name = $request->input('name');
-            $category->slug = Str::slug($request->input('name'));
-        }
-
-        // Check and update description
-        if ($request->has('description') && $request->input('description') !== $category->description) {
-            $category->description = $request->input('description');
-        }
-
-        // Check and update service_id
-        if ($request->has('service_id') && $request->input('service_id') !== $category->service_id) {
-            $category->service_id = $request->input('service_id');
-        }
+        // Always assign new values, even if the same
+        $category->name = $request->input('name', $category->name);
+        $category->slug = Str::slug($request->input('name', $category->name));
+        $category->description = $request->input('description', $category->description);
+        $category->service_id = $request->input('service_id', $category->service_id);
 
         // Handle image update
         if ($request->hasFile('image')) {
-            // Delete old image
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);
             }
 
-            // Store new image
             $path = $request->file('image')->store('categories', 'public');
             $category->image = $path;
         }
 
-        // Check if anything is dirty (changed), only then save
-        if ($category->isDirty()) {
-            $category->save();
-            return response()->json([
-                'status' => 200,
-                'message' => 'Category updated successfully.',
-                'data' => $category,
-            ]);
-        } else {
-            return response()->json([
-                'status' => 200,
-                'message' => 'No changes made to the category.',
-                'data' => $category,
-            ]);
-        }
+        // Save regardless of dirty check
+        $category->save();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Category updated successfully.',
+            'data' => $category,
+        ]);
     } catch (\Exception $e) {
         return response()->json([
             'status' => 500,
