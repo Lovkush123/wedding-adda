@@ -138,11 +138,19 @@ public function update(Request $request, $id)
     try {
         $category = Category::findOrFail($id);
 
-        // Always assign new values, even if the same
-        $category->name = $request->input('name', $category->name);
-        $category->slug = Str::slug($request->input('name', $category->name));
-        $category->description = $request->input('description', $category->description);
-        $category->service_id = $request->input('service_id', $category->service_id);
+        // Update only if request has the value
+        if ($request->has('name')) {
+            $category->name = $request->input('name');
+            $category->slug = Str::slug($category->name);
+        }
+
+        if ($request->has('description')) {
+            $category->description = $request->input('description');
+        }
+
+        if ($request->has('service_id')) {
+            $category->service_id = $request->input('service_id');
+        }
 
         // Handle image update
         if ($request->hasFile('image')) {
@@ -154,8 +162,10 @@ public function update(Request $request, $id)
             $category->image = $path;
         }
 
-        // Save regardless of dirty check
         $category->save();
+
+        // Reload updated data from DB
+        $category->refresh();
 
         return response()->json([
             'status' => 200,
