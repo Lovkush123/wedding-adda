@@ -138,33 +138,35 @@ public function update(Request $request, $id)
     try {
         $category = Category::findOrFail($id);
 
+        // Debug incoming request data (you can remove this in production)
+        // logger($request->all());
+
         // Validate input
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'nullable|string',
-            'service_id' => 'required|integer|exists:services,id', // assuming service_id must exist
+            'service_id' => 'required|integer|exists:services,id',
         ]);
 
-        // Update basic fields
-        $category->name = $validatedData['name'];
-        $category->slug = Str::slug($validatedData['name']);
-        $category->description = $validatedData['description'] ?? $category->description;
-        $category->service_id = $validatedData['service_id'];
+        // Update fields
+        $category->fill([
+            'name' => $validatedData['name'],
+            'slug' => Str::slug($validatedData['name']),
+            'description' => $validatedData['description'] ?? $category->description,
+            'service_id' => $validatedData['service_id'],
+        ]);
 
         // Handle image update
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);
             }
 
-            // Store new image
             $path = $request->file('image')->store('categories', 'public');
             $category->image = $path;
         }
 
-        // Save changes
         $category->save();
 
         return response()->json([
@@ -186,6 +188,7 @@ public function update(Request $request, $id)
         ]);
     }
 }
+
 
   
     
