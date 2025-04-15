@@ -88,36 +88,60 @@ class CategoryController extends Controller
   // Update an existing category
   public function update(Request $request, $id)
   {
-      $category = Category::findOrFail($id);
-
-      $request->validate([
-          'name' => 'required|string|max:255',
-          'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-          'description' => 'nullable|string',
-          'service_id' => 'required|integer',
-      ]);
-
-      $data = $request->only(['name', 'description', 'service_id']);
-      $data['slug'] = Str::slug($request->name);
-
-      // Handle image upload
-      if ($request->hasFile('image')) {
-          // Delete old image
-          if ($category->image && Storage::disk('public')->exists($category->image)) {
-              Storage::disk('public')->delete($category->image);
+      try {
+          $category = Category::find($id);
+  
+          if (!$category) {
+              return response()->json([
+                  'status' => 404,
+                  'message' => 'Category not found.',
+              ], 404);
           }
-
-          $data['image'] = $request->file('image')->store('categories', 'public');
+  
+          $request->validate([
+              'name' => 'required|string|max:255',
+              'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+              'description' => 'nullable|string',
+              'service_id' => 'required|integer',
+          ]);
+  
+          $category->name = $request->input('name');
+          $category->slug = Str::slug($request->input('name'));
+          $category->description = $request->input('description');
+          $category->service_id = $request->input('service_id');
+  
+          // Handle image upload if exists
+          if ($request->hasFile('image')) {
+              // Delete old image if it exists
+              if ($category->image && Storage::disk('public')->exists($category->image)) {
+                  Storage::disk('public')->delete($category->image);
+              }
+  
+              $path = $request->file('image')->store('categories', 'public');
+              $category->image = $path;
+          }
+  
+          $category->save();
+  
+          // Return category with full image URL
+          $category->image = $category->image ? $this->baseUrl . $category->image : null;
+  
+          return response()->json([
+              'status' => 200,
+              'message' => 'Category updated successfully.',
+              'data' => $category
+          ], 200);
+      } catch (\Exception $e) {
+          Log::error('Category update error: ' . $e->getMessage());
+  
+          return response()->json([
+              'status' => 500,
+              'message' => 'Something went wrong while updating category.',
+              'error' => $e->getMessage()
+          ], 500);
       }
-
-      $category->update($data);
-
-      return response()->json([
-          'status' => 200,
-          'message' => 'Category updated successfully.',
-          'data' => $category,
-      ]);
   }
+  
     
 
     
