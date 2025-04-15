@@ -97,17 +97,17 @@ class CategoryController extends Controller
           'service_id' => 'required|integer',
       ]);
 
-      $data = $request->all();
+      $data = $request->only(['name', 'description', 'service_id']);
       $data['slug'] = Str::slug($request->name);
 
+      // Handle image upload
       if ($request->hasFile('image')) {
-          // Delete old image if it exists
+          // Delete old image
           if ($category->image && Storage::disk('public')->exists($category->image)) {
               Storage::disk('public')->delete($category->image);
           }
 
-          $path = $request->file('image')->store('categories', 'public');
-          $data['image'] = $path;
+          $data['image'] = $request->file('image')->store('categories', 'public');
       }
 
       $category->update($data);
@@ -116,9 +116,8 @@ class CategoryController extends Controller
           'status' => 200,
           'message' => 'Category updated successfully.',
           'data' => $category,
-      ], 200);
+      ]);
   }
-    
     
 
     
