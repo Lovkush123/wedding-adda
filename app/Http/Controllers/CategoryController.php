@@ -86,36 +86,38 @@ class CategoryController extends Controller
 
     // Update the specified category
   // Update an existing category
-public function update(Request $request, $id)
-{
-    $category = Category::findOrFail($id);
+  public function update(Request $request, $id)
+  {
+      $category = Category::findOrFail($id);
 
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'description' => 'nullable|string',
-        'service_id' => 'required|integer',
-    ]);
+      $request->validate([
+          'name' => 'required|string|max:255',
+          'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+          'description' => 'nullable|string',
+          'service_id' => 'required|integer',
+      ]);
 
-    $data = $request->all();
-    $data['slug'] = Str::slug($request->name);
+      $data = $request->all();
+      $data['slug'] = Str::slug($request->name);
 
-    // Handle image update
-    if ($request->hasFile('image')) {
-        // Delete old image if exists
-        if ($category->image && \Storage::disk('public')->exists($category->image)) {
-            \Storage::disk('public')->delete($category->image);
-        }
+      if ($request->hasFile('image')) {
+          // Delete old image if it exists
+          if ($category->image && Storage::disk('public')->exists($category->image)) {
+              Storage::disk('public')->delete($category->image);
+          }
 
-        $path = $request->file('image')->store('categories', 'public');
-        $data['image'] = $path;
-    }
+          $path = $request->file('image')->store('categories', 'public');
+          $data['image'] = $path;
+      }
 
-    $category->update($data);
+      $category->update($data);
 
-    return response()->json($category, 200);
-}
-
+      return response()->json([
+          'status' => 200,
+          'message' => 'Category updated successfully.',
+          'data' => $category,
+      ], 200);
+  }
     
     
 
