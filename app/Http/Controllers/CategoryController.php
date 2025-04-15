@@ -135,29 +135,24 @@ class CategoryController extends Controller
 //   }
 public function update(Request $request, $id)
 {
+    // First, validate the incoming data
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:255',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'description' => 'nullable|string',
+        'service_id' => 'required|integer|exists:services,id',
+    ]);
+
     try {
         $category = Category::findOrFail($id);
 
-        // Debug incoming request data (you can remove this in production)
-        // logger($request->all());
-
-        // Validate input
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'description' => 'nullable|string',
-            'service_id' => 'required|integer|exists:services,id',
-        ]);
-
         // Update fields
-        $category->fill([
-            'name' => $validatedData['name'],
-            'slug' => Str::slug($validatedData['name']),
-            'description' => $validatedData['description'] ?? $category->description,
-            'service_id' => $validatedData['service_id'],
-        ]);
+        $category->name = $validatedData['name'];
+        $category->slug = Str::slug($validatedData['name']);
+        $category->description = $validatedData['description'] ?? $category->description;
+        $category->service_id = $validatedData['service_id'];
 
-        // Handle image update
+        // Handle image upload
         if ($request->hasFile('image')) {
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);
@@ -174,12 +169,7 @@ public function update(Request $request, $id)
             'message' => 'Category updated successfully.',
             'data' => $category,
         ]);
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        return response()->json([
-            'status' => 422,
-            'message' => 'Validation failed.',
-            'errors' => $e->errors(),
-        ]);
+
     } catch (\Exception $e) {
         return response()->json([
             'status' => 500,
@@ -188,7 +178,6 @@ public function update(Request $request, $id)
         ]);
     }
 }
-
 
   
     
