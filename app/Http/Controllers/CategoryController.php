@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 
+
+
+
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
 class CategoryController extends Controller
 {
     // Display a listing of categories
@@ -182,21 +188,32 @@ public function update(Request $request, $id): JsonResponse
             $responseData['image'] = $this->baseUrl . $category->image;
         }
 
-        return $this->successResponse($responseData, 'Category updated successfully');
+        return response()->json([
+            'status' => true,
+            'message' => 'Category updated successfully',
+            'data' => $responseData
+        ]);
 
     } catch (ModelNotFoundException $e) {
-        return $this->errorResponse('Category not found', 404);
+        return response()->json([
+            'status' => false,
+            'message' => 'Category not found'
+        ], 404);
         
     } catch (ValidationException $e) {
-        return $this->errorResponse('Validation failed', 422, $e->errors());
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
         
     } catch (\Exception $e) {
         Log::error('Category update failed: ' . $e->getMessage());
-        return $this->errorResponse(
-            'Failed to update category',
-            500,
-            env('APP_DEBUG') ? $e->getMessage() : null
-        );
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to update category',
+            'error' => env('APP_DEBUG') ? $e->getMessage() : null
+        ], 500);
     }
 }
 
