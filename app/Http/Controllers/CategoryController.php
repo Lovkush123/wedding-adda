@@ -137,83 +137,66 @@ class CategoryController extends Controller
 public function update(Request $request, $id): JsonResponse
 {
     try {
-        // Find the category or fail
         $category = Category::findOrFail($id);
 
-        // Validate request data
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
+            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'description' => 'sometimes|nullable|string',
             'service_id' => 'sometimes|required|integer|exists:services,id',
         ]);
 
-        // Update name and slug if provided
+        // Prepare data for update
+        $updateData = [];
+        
         if ($request->has('name')) {
-            $category->name = $validatedData['name'];
-            $category->slug = Str::slug($validatedData['name']);
+            $updateData['name'] = $validatedData['name'];
+            $updateData['slug'] = Str::slug($validatedData['name']);
         }
 
-        // Update description if provided
         if ($request->has('description')) {
-            $category->description = $validatedData['description'];
+            $updateData['description'] = $validatedData['description'];
         }
 
-        // Update service_id if provided
         if ($request->has('service_id')) {
-            $category->service_id = $validatedData['service_id'];
+            $updateData['service_id'] = $validatedData['service_id'];
         }
 
         // Handle image upload
-        if ($request->hasFile('image')) {
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
             // Delete old image if exists
             if ($category->image) {
                 $oldImagePath = str_replace($this->baseUrl, '', $category->image);
-                if (Storage::disk('public')->exists($oldImagePath)) {
-                    Storage::disk('public')->delete($oldImagePath);
-                }
+                Storage::disk('public')->delete($oldImagePath);
             }
-            
-            // Store new image
-            $path = $request->file('image')->store('categories', 'public');
-            $category->image = $path;
+
+            $updateData['image'] = $request->file('image')->store('categories', 'public');
         }
 
-        // Save changes
-        $category->save();
+        // Update the category
+        $category->update($updateData);
 
         // Prepare response data
-        $responseData = $category->toArray();
+        $responseData = $category->fresh()->toArray();
         if ($category->image) {
             $responseData['image'] = $this->baseUrl . $category->image;
         }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Category updated successfully',
-            'data' => $responseData
-        ]);
+        return $this->successResponse($responseData, 'Category updated successfully');
 
     } catch (ModelNotFoundException $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Category not found'
-        ], 404);
+        return $this->errorResponse('Category not found', 404);
         
     } catch (ValidationException $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Validation failed',
-            'errors' => $e->errors()
-        ], 422);
+        return $this->errorResponse('Validation failed', 422, $e->errors());
         
     } catch (\Exception $e) {
         Log::error('Category update failed: ' . $e->getMessage());
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to update category',
-            'error' => env('APP_DEBUG') ? $e->getMessage() : 'Internal server error'
-        ], 500);
+        return $this->errorResponse(
+            'Failed to update category',
+            500,
+            env('APP_DEBUG') ? $e->getMessage() : null
+        );
     }
 }
 
