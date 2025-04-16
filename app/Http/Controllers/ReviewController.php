@@ -17,19 +17,27 @@ class ReviewController extends Controller
     // Store a new review
     public function store(Request $request)
     {
+        // Validate incoming data
         $request->validate([
             'vendor_id' => 'required|exists:vendors,id',
             'stars' => 'required|integer|min:1|max:5',
             'review' => 'nullable|string',
         ]);
-
-        $review = Review::create($request->only('vendor_id', 'stars', 'review'));
-
+    
+        // Create a new review using mass assignment
+        $review = Review::create([
+            'vendor_id' => $request->vendor_id,
+            'stars' => $request->stars,
+            'review' => $request->review,
+        ]);
+    
+        // Return a success response with the review data
         return response()->json([
             'message' => 'Review created successfully',
             'review' => $review,
         ], 201);
     }
+    
 
     // Show a specific review
     public function show($id)
