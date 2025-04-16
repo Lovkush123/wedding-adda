@@ -146,14 +146,24 @@ public function update(Request $request, $id): JsonResponse
     }
 
     $validated = $request->validate([
-        'name' => 'sometimes|string|max:255',
-        'description' => 'sometimes|nullable|string',
-        'service_id' => 'sometimes|exists:services,id',
-        'image' => 'sometimes|image|max:2048',
+        'name' => 'nullable|string|max:255',
+        'description' => 'nullable|string',
+        'service_id' => 'nullable|exists:services,id',
+        'image' => 'nullable|image|max:2048',
     ]);
 
-    if (isset($validated['name'])) {
-        $validated['slug'] = Str::slug($validated['name']);
+    // Manually assign fields
+    if ($request->filled('name')) {
+        $category->name = $request->name;
+        $category->slug = Str::slug($request->name);
+    }
+
+    if ($request->has('description')) {
+        $category->description = $request->description;
+    }
+
+    if ($request->has('service_id')) {
+        $category->service_id = $request->service_id;
     }
 
     if ($request->hasFile('image') && $request->file('image')->isValid()) {
@@ -162,16 +172,10 @@ public function update(Request $request, $id): JsonResponse
         }
 
         $imagePath = $request->file('image')->store('categories', 'public');
-        $validated['image'] = $imagePath;
+        $category->image = $imagePath;
     }
 
-    // Log before updating
-    \Log::info('Updating category ID: '.$id, ['validated' => $validated]);
-
-    $category->update($validated);
-
-    // Log after update
-    \Log::info('Updated category:', ['data' => $category->fresh()]);
+    $category->save();
 
     return response()->json([
         'status' => 200,
