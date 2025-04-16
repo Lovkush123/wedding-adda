@@ -149,14 +149,13 @@ public function update(Request $request, $id): JsonResponse
         'name' => 'sometimes|string|max:255',
         'description' => 'sometimes|nullable|string',
         'service_id' => 'sometimes|exists:services,id',
-        'image' => 'sometimes|image|max:2048', // max 2MB
+        'image' => 'sometimes|image|max:2048',
     ]);
 
     if (isset($validated['name'])) {
         $validated['slug'] = Str::slug($validated['name']);
     }
 
-    // Handle image upload
     if ($request->hasFile('image') && $request->file('image')->isValid()) {
         if ($category->image) {
             Storage::disk('public')->delete($category->image);
@@ -166,7 +165,13 @@ public function update(Request $request, $id): JsonResponse
         $validated['image'] = $imagePath;
     }
 
+    // Log before updating
+    \Log::info('Updating category ID: '.$id, ['validated' => $validated]);
+
     $category->update($validated);
+
+    // Log after update
+    \Log::info('Updated category:', ['data' => $category->fresh()]);
 
     return response()->json([
         'status' => 200,
@@ -174,6 +179,7 @@ public function update(Request $request, $id): JsonResponse
         'data' => $category->fresh(),
     ]);
 }
+
 
 
 
