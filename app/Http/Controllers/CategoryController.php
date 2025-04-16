@@ -137,39 +137,43 @@ class CategoryController extends Controller
 public function update(Request $request, $id): JsonResponse
 {
     try {
-        $category = Category::findOrFail($id); // Will throw 404 if not found
+        $category = Category::findOrFail($id); // 404 if not found
 
+        // Validation
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'service_id' => 'nullable|exists:services,id',
+            'service_id' => 'nullable|integer|exists:services,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        if (isset($validated['name'])) {
-            $category->name = $validated['name'];
-            $category->slug = Str::slug($validated['name']);
+        // Update name and slug
+        if ($request->filled('name')) {
+            $category->name = $request->name;
+            $category->slug = Str::slug($request->name);
         }
 
-        if (isset($validated['description'])) {
-            $category->description = $validated['description'];
+        // Update description
+        if ($request->has('description')) {
+            $category->description = $request->description;
         }
 
-        if (isset($validated['service_id'])) {
-            $category->service_id = $validated['service_id'];
+        // Update service_id
+        if ($request->has('service_id')) {
+            $category->service_id = $request->service_id;
         }
 
+        // Update image
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);
             }
 
-            $path = $request->file('image')->store('categories', 'public');
-            $category->image = $path;
+            $imagePath = $request->file('image')->store('categories', 'public');
+            $category->image = $imagePath;
         }
 
-        $category->save();
+        $category->save(); // ✅ Save changes
 
         return response()->json([
             'status' => 200,
@@ -183,12 +187,12 @@ public function update(Request $request, $id): JsonResponse
             'errors' => $e->errors()
         ]);
     } catch (\Exception $e) {
-        \Log::error('Category update failed: ' . $e->getMessage());
+        \Log::error("Category update failed: " . $e->getMessage());
 
         return response()->json([
             'status' => 500,
             'message' => 'Something went wrong.',
-            'error' => $e->getMessage(),
+            'error' => $e->getMessage()
         ]);
     }
 }
