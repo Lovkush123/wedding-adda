@@ -136,53 +136,63 @@ class CategoryController extends Controller
 //   }
 public function update(Request $request, $id): JsonResponse
 {
-    $category = Category::find($id);
+    try {
+        $category = Category::findOrFail($id); // Will throw 404 if not found
 
-    if (!$category) {
-        return response()->json([
-            'status' => 404,
-            'message' => 'Category not found.',
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'service_id' => 'nullable|exists:services,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-    }
 
-    $validated = $request->validate([
-        'name' => 'nullable|string|max:255',
-        'description' => 'nullable|string',
-        'service_id' => 'nullable|exists:services,id',
-        'image' => 'nullable|image|max:2048',
-    ]);
-
-    // Manually assign fields
-    if ($request->filled('name')) {
-        $category->name = $request->name;
-        $category->slug = Str::slug($request->name);
-    }
-
-    if ($request->has('description')) {
-        $category->description = $request->description;
-    }
-
-    if ($request->has('service_id')) {
-        $category->service_id = $request->service_id;
-    }
-
-    if ($request->hasFile('image') && $request->file('image')->isValid()) {
-        if ($category->image) {
-            Storage::disk('public')->delete($category->image);
+        if (isset($validated['name'])) {
+            $category->name = $validated['name'];
+            $category->slug = Str::slug($validated['name']);
         }
 
-        $imagePath = $request->file('image')->store('categories', 'public');
-        $category->image = $imagePath;
+        if (isset($validated['description'])) {
+            $category->description = $validated['description'];
+        }
+
+        if (isset($validated['service_id'])) {
+            $category->service_id = $validated['service_id'];
+        }
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+
+            $path = $request->file('image')->store('categories', 'public');
+            $category->image = $path;
+        }
+
+        $category->save();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Category updated successfully.',
+            'data' => $category->fresh(),
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'status' => 422,
+            'message' => 'Validation failed.',
+            'errors' => $e->errors()
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Category update failed: ' . $e->getMessage());
+
+        return response()->json([
+            'status' => 500,
+            'message' => 'Something went wrong.',
+            'error' => $e->getMessage(),
+        ]);
     }
-
-    $category->save();
-
-    return response()->json([
-        'status' => 200,
-        'message' => 'Category updated successfully.',
-        'data' => $category->fresh(),
-    ]);
 }
+
 
 
 
