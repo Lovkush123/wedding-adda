@@ -133,52 +133,45 @@ class CategoryController extends Controller
 //           ]);
 //       }
 //   }
-public function update(Request $request, $id)
+public function update(Request $request, $id): JsonResponse
 {
-    try {
-        $category = Category::findOrFail($id);
+    $category = Category::find($id);
 
-        // Update only if request has the value
-        if ($request->has('name')) {
-            $category->name = $request->input('name');
-            $category->slug = Str::slug($category->name);
-        }
-
-        if ($request->has('description')) {
-            $category->description = $request->input('description');
-        }
-
-        if ($request->has('service_id')) {
-            $category->service_id = $request->input('service_id');
-        }
-
-        // Handle image update
-        if ($request->hasFile('image')) {
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
-            }
-
-            $path = $request->file('image')->store('categories', 'public');
-            $category->image = $path;
-        }
-
-        $category->save();
-
-        // Reload updated data from DB
-        $category->refresh();
-
+    if (!$category) {
         return response()->json([
-            'status' => 200,
-            'message' => 'Category updated successfully.',
-            'data' => $category,
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'Something went wrong.',
-            'error' => $e->getMessage(),
+            'status' => 404,
+            'message' => 'Category not found.',
         ]);
     }
+
+    $validated = $request->validate([
+        'name' => 'sometimes|string|max:255',
+        'description' => 'sometimes|nullable|string',
+        'service_id' => 'sometimes|exists:services,id',
+        'image' => 'sometimes|image|max:2048', // max 2MB
+    ]);
+
+    if (isset($validated['name'])) {
+        $validated['slug'] = Str::slug($validated['name']);
+    }
+
+    // Handle image upload
+    if ($request->hasFile('image') && $request->file('image')->isValid()) {
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
+
+        $imagePath = $request->file('image')->store('categories', 'public');
+        $validated['image'] = $imagePath;
+    }
+
+    $category->update($validated);
+
+    return response()->json([
+        'status' => 200,
+        'message' => 'Category updated successfully.',
+        'data' => $category->fresh(),
+    ]);
 }
 
 
