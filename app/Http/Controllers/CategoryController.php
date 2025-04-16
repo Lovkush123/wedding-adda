@@ -137,71 +137,82 @@ class CategoryController extends Controller
 public function update(Request $request, $id): JsonResponse
 {
     try {
+        // Find the category or fail
         $category = Category::findOrFail($id);
 
+        // Validate request data
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
             'description' => 'sometimes|nullable|string',
             'service_id' => 'sometimes|required|integer|exists:services,id',
         ]);
 
-        // Update fields if they exist in request
+        // Update name and slug if provided
         if ($request->has('name')) {
             $category->name = $validatedData['name'];
             $category->slug = Str::slug($validatedData['name']);
         }
 
+        // Update description if provided
         if ($request->has('description')) {
             $category->description = $validatedData['description'];
         }
 
+        // Update service_id if provided
         if ($request->has('service_id')) {
             $category->service_id = $validatedData['service_id'];
         }
 
-        // Handle image update
+        // Handle image upload
         if ($request->hasFile('image')) {
             // Delete old image if exists
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
+            if ($category->image) {
+                $oldImagePath = str_replace($this->baseUrl, '', $category->image);
+                if (Storage::disk('public')->exists($oldImagePath)) {
+                    Storage::disk('public')->delete($oldImagePath);
+                }
             }
             
+            // Store new image
             $path = $request->file('image')->store('categories', 'public');
             $category->image = $path;
         }
 
+        // Save changes
         $category->save();
 
-        // Prepend base URL to image if it exists
+        // Prepare response data
+        $responseData = $category->toArray();
         if ($category->image) {
-            $category->image = $this->baseUrl . $category->image;
+            $responseData['image'] = $this->baseUrl . $category->image;
         }
 
         return response()->json([
-            'status' => 200,
+            'status' => true,
             'message' => 'Category updated successfully',
-            'data' => $category
+            'data' => $responseData
         ]);
 
     } catch (ModelNotFoundException $e) {
         return response()->json([
-            'status' => 404,
+            'status' => false,
             'message' => 'Category not found'
         ], 404);
         
     } catch (ValidationException $e) {
         return response()->json([
-            'status' => 422,
+            'status' => false,
             'message' => 'Validation failed',
             'errors' => $e->errors()
         ], 422);
         
     } catch (\Exception $e) {
+        Log::error('Category update failed: ' . $e->getMessage());
         return response()->json([
-            'status' => 500,
-            'message' => 'Server error',
-            'error' => $e->getMessage()
+            'status' => false,
+            'message' => 'Failed to update category',
+            'error' => env('APP_DEBUG') ? $e->getMessage() : 'Internal server error'
         ], 500);
     }
 }
