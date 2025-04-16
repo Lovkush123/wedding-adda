@@ -217,16 +217,6 @@ public function update(Request $request, $id): JsonResponse
     }
 }
 
-
-
-
-
-  
-    
-
-    
-    
-
     // Remove the specified category
     public function destroy($id)
     {
