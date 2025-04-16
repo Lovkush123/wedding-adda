@@ -12,6 +12,7 @@ use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\PricingController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/users', [UserController::class, 'index']); // Get all users
@@ -147,3 +148,18 @@ Route::post('/pricing', [PricingController::class, 'store']);     // Create a ne
 Route::get('/pricing/{id}', [PricingController::class, 'show']);  // Get a specific pricing record
 Route::put('/pricing/{id}', [PricingController::class, 'update']); // Update an existing pricing record
 Route::delete('/pricing/{id}', [PricingController::class, 'destroy']); // Delete a pricing record
+
+Route::get('/reviews', [ReviewController::class, 'index']);
+
+// Create a new review
+Route::post('/reviews', [ReviewController::class, 'store']);
+
+// Get a specific review by ID
+Route::get('/reviews/{id}', [ReviewController::class, 'show']);
+
+// Update a review by ID
+Route::put('/reviews/{id}', [ReviewController::class, 'update']);
+Route::patch('/reviews/{id}', [ReviewController::class, 'update']); // Optional: for partial updates
+
+// Delete a review by ID
+Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
