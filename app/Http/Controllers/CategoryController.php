@@ -7,6 +7,7 @@ use App\Models\SubCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Http\JsonResponse;
 
 class CategoryController extends Controller
 {
