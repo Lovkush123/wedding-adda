@@ -302,7 +302,7 @@ public function update(Request $request, $id): JsonResponse
 
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'image' => 'sometimes|nullable|file|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image_base64' => 'sometimes|nullable|string',
             'description' => 'sometimes|nullable|string',
             'service_id' => 'sometimes|required|integer|exists:services,id',
         ]);
@@ -322,17 +322,45 @@ public function update(Request $request, $id): JsonResponse
             $updateData['service_id'] = $validatedData['service_id'];
         }
 
-        // Handle image upload from form data
-        if ($request->hasFile('image') && $request->file('image')->isValid()) {
-            // Delete old image if exists
-            if (!empty($category->image)) {
-                $oldImagePath = str_replace('storage/', '', $category->image);
-                Storage::disk('public')->delete($oldImagePath);
-            }
+        // Handle base64 image upload
+        if ($request->has('image_base64')) {
+            $imageData = $request->input('image_base64');
 
-            // Upload new image
-            $path = $request->file('image')->store('categories', 'public');
-            $updateData['image'] = 'storage/' . $path;
+            if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
+                $imageData = substr($imageData, strpos($imageData, ',') + 1);
+                $type = strtolower($type[1]); // jpg, png, gif, webp, etc.
+
+                if (!in_array($type, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid image type.',
+                    ], 422);
+                }
+
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Base64 decode failed.',
+                    ], 422);
+                }
+
+                // Delete old image if exists
+                if (!empty($category->image)) {
+                    $oldImagePath = str_replace('storage/', '', $category->image);
+                    Storage::disk('public')->delete($oldImagePath);
+                }
+
+                $fileName = 'categories/' . uniqid() . '.' . $type;
+                Storage::disk('public')->put($fileName, $imageData);
+                $updateData['image'] = 'storage/' . $fileName;
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid base64 image format.',
+                ], 422);
+            }
         }
 
         $category->update($updateData);
@@ -369,6 +397,7 @@ public function update(Request $request, $id): JsonResponse
         ], 500);
     }
 }
+
 
     // Remove the specified category
     public function destroy($id)
