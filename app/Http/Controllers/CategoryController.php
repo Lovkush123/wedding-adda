@@ -216,187 +216,56 @@ class CategoryController extends Controller
 //         ], 500);
 //     }
 // }
-// public function update(Request $request, $id): JsonResponse
-// {
-//     try {
-//         $category = Category::findOrFail($id);
-
-//         $validatedData = $request->validate([
-//             'name' => 'sometimes|required|string|max:255',
-//             'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-//             'description' => 'sometimes|nullable|string',
-//             'service_id' => 'sometimes|required|integer|exists:services,id',
-//         ]);
-
-//         // Prepare data for update
-//         $updateData = [];
-
-//         if ($request->has('name')) {
-//             $updateData['name'] = $validatedData['name'];
-//             $updateData['slug'] = Str::slug($validatedData['name']);
-//         }
-
-//         if ($request->has('description')) {
-//             $updateData['description'] = $validatedData['description'];
-//         }
-
-//         if ($request->has('service_id')) {
-//             $updateData['service_id'] = $validatedData['service_id'];
-//         }
-
-//         // Handle image upload
-//         if ($request->hasFile('image') && $request->file('image')->isValid()) {
-//             // Delete old image if exists
-//             if (!empty($category->image)) {
-//                 $oldImagePath = str_replace($this->baseUrl . 'storage/', '', $category->image);
-//                 Storage::disk('public')->delete($oldImagePath);
-//             }
-
-//             $newImagePath = $request->file('image')->store('categories', 'public');
-//             $updateData['image'] = 'storage/' . $newImagePath; // store with 'storage/' for URL access
-//         }
-
-//         // Update the category
-//         $category->update($updateData);
-
-//         // Prepare response data
-//         $responseData = $category->fresh()->toArray();
-
-//         // Prepend full URL to image path if available
-//         if (!empty($category->image)) {
-//             $responseData['image'] = $this->baseUrl . $category->image;
-//         }
-
-//         return response()->json([
-//             'status' => true,
-//             'message' => 'Category updated successfully',
-//             'data' => $responseData
-//         ]);
-
-//     } catch (ModelNotFoundException $e) {
-//         return response()->json([
-//             'status' => false,
-//             'message' => 'Category not found'
-//         ], 404);
-
-//     } catch (ValidationException $e) {
-//         return response()->json([
-//             'status' => false,
-//             'message' => 'Validation failed',
-//             'errors' => $e->errors()
-//         ], 422);
-
-//     } catch (\Exception $e) {
-//         Log::error('Category update failed: ' . $e->getMessage());
-//         return response()->json([
-//             'status' => false,
-//             'message' => 'Failed to update category',
-//             'error' => env('APP_DEBUG') ? $e->getMessage() : null
-//         ], 500);
-//     }
-// }
 public function update(Request $request, $id): JsonResponse
 {
-    try {
-        $category = Category::findOrFail($id);
+    $category = Category::find($id);
 
-        $validatedData = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'image_base64' => 'sometimes|nullable|string',
-            'description' => 'sometimes|nullable|string',
-            'service_id' => 'sometimes|required|integer|exists:services,id',
-        ]);
-
-        $updateData = [];
-
-        if ($request->has('name')) {
-            $updateData['name'] = $validatedData['name'];
-            $updateData['slug'] = Str::slug($validatedData['name']);
-        }
-
-        if ($request->has('description')) {
-            $updateData['description'] = $validatedData['description'];
-        }
-
-        if ($request->has('service_id')) {
-            $updateData['service_id'] = $validatedData['service_id'];
-        }
-
-        // Handle base64 image upload
-        if ($request->has('image_base64')) {
-            $imageData = $request->input('image_base64');
-
-            if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
-                $imageData = substr($imageData, strpos($imageData, ',') + 1);
-                $type = strtolower($type[1]); // jpg, png, gif, webp, etc.
-
-                if (!in_array($type, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Invalid image type.',
-                    ], 422);
-                }
-
-                $imageData = base64_decode($imageData);
-
-                if ($imageData === false) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Base64 decode failed.',
-                    ], 422);
-                }
-
-                // Delete old image if exists
-                if (!empty($category->image)) {
-                    $oldImagePath = str_replace('storage/', '', $category->image);
-                    Storage::disk('public')->delete($oldImagePath);
-                }
-
-                $fileName = 'categories/' . uniqid() . '.' . $type;
-                Storage::disk('public')->put($fileName, $imageData);
-                $updateData['image'] = 'storage/' . $fileName;
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Invalid base64 image format.',
-                ], 422);
-            }
-        }
-
-        $category->update($updateData);
-
-        $responseData = $category->fresh()->toArray();
-        if (!empty($category->image)) {
-            $responseData['image'] = url($category->image); // full URL to image
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Category updated successfully',
-            'data' => $responseData
-        ]);
-    } catch (ModelNotFoundException $e) {
+    if (!$category) {
         return response()->json([
             'status' => false,
             'message' => 'Category not found'
         ], 404);
-
-    } catch (ValidationException $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Validation failed',
-            'errors' => $e->errors()
-        ], 422);
-
-    } catch (\Exception $e) {
-        Log::error('Category update failed: ' . $e->getMessage());
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to update category',
-            'error' => env('APP_DEBUG') ? $e->getMessage() : null
-        ], 500);
     }
+
+    $validated = $request->validate([
+        'name' => 'sometimes|required|string|max:255',
+        'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'description' => 'sometimes|nullable|string',
+        'service_id' => 'sometimes|required|integer|exists:services,id',
+    ]);
+
+    // Auto-generate slug if name is present
+    if (isset($validated['name'])) {
+        $validated['slug'] = Str::slug($validated['name']);
+    }
+
+    // Handle image upload
+    if ($request->hasFile('image') && $request->file('image')->isValid()) {
+        // Delete old image if it exists
+        if (!empty($category->image)) {
+            $oldImagePath = str_replace('storage/', '', $category->image);
+            Storage::disk('public')->delete($oldImagePath);
+        }
+
+        $imagePath = $request->file('image')->store('categories', 'public');
+        $validated['image'] = 'storage/' . $imagePath;
+    }
+
+    $category->update($validated);
+    $category->refresh();
+
+    // Prepend full URL to image if available
+    if (!empty($category->image)) {
+        $category->image = $this->baseUrl . $category->image;
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Category updated successfully',
+        'data' => $category
+    ]);
 }
+
 
 
     // Remove the specified category
