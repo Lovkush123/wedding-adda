@@ -122,7 +122,7 @@ Route::post('/vendors/{id}', [VendorController::class, 'update']);
 
 // Delete a vendor by ID
 Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
-
+Route::get('{category_slug}/{subcategory_slug?}/{vendor_slug?}', [VendorController::class, 'fetchBySlugs']);
 // Get all features
 Route::get('/features', [FeatureController::class, 'index']);
 
