@@ -222,8 +222,8 @@ public function update(Request $request, $id): JsonResponse
 
     if (!$category) {
         return response()->json([
-            'status' => false,
-            'message' => 'Category not found'
+            'success' => false,
+            'message' => 'Category not found.'
         ], 404);
     }
 
@@ -234,15 +234,30 @@ public function update(Request $request, $id): JsonResponse
         'service_id' => 'sometimes|required|integer|exists:services,id',
     ]);
 
-    // Auto-generate slug if name is present
+    // Check for duplicate category name for the same service_id (if applicable)
+    if (isset($validated['name']) && isset($validated['service_id'])) {
+        $existingCategory = Category::where('name', $validated['name'])
+            ->where('service_id', $validated['service_id'])
+            ->where('id', '!=', $id)
+            ->first();
+
+        if ($existingCategory) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The category name already exists for this service.'
+            ], 422);
+        }
+    }
+
+    // Generate slug if name is provided
     if (isset($validated['name'])) {
         $validated['slug'] = Str::slug($validated['name']);
     }
 
-    // Handle image upload
-    if ($request->hasFile('image') && $request->file('image')->isValid()) {
-        // Delete old image if it exists
-        if (!empty($category->image)) {
+    // Image handling
+    if ($request->hasFile('image')) {
+        // Delete old image if exists
+        if ($category->image) {
             $oldImagePath = str_replace('storage/', '', $category->image);
             Storage::disk('public')->delete($oldImagePath);
         }
@@ -252,18 +267,17 @@ public function update(Request $request, $id): JsonResponse
     }
 
     $category->update($validated);
-    $category->refresh();
 
-    // Prepend full URL to image if available
-    if (!empty($category->image)) {
+    // Append full URL to image if it exists
+    if ($category->image) {
         $category->image = $this->baseUrl . $category->image;
     }
 
     return response()->json([
-        'status' => true,
-        'message' => 'Category updated successfully',
+        'success' => true,
+        'message' => 'Category updated successfully.',
         'data' => $category
-    ]);
+    ], 200);
 }
 
 
