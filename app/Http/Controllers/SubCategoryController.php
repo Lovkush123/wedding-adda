@@ -68,7 +68,7 @@ class SubCategoryController extends Controller
   // Fetch all subcategories with full image URL
   public function index()
   {
-      $baseUrl = 'https://api.weddingzadda.com/storage/';
+      $baseUrl = 'https://api.weddingzadda.com/';
 
       $subcategories = SubCategory::with('category')->get()->map(function ($subcategory) use ($baseUrl) {
           return [

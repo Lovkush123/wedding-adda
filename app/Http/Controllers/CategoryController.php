@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class CategoryController extends Controller
 {
     // Display a listing of categories
-    private $baseUrl = 'https://api.weddingzadda.com/storage/';
+    private $baseUrl = 'https://api.weddingzadda.com/';
 
     // Display a listing of categories
     // public function index()
