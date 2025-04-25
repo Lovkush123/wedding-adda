@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Http\JsonResponse;
 class VendorController extends Controller
 {
  
@@ -277,44 +277,66 @@ public function store(Request $request)
 
    
 
-    // Update vendor with image handling
-    public function update(Request $request, $id)
-    {
-        $vendor = Vendor::findOrFail($id);
+public function update(Request $request, $id): JsonResponse
+{
+    $vendor = Vendor::find($id);
 
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'category_id' => 'sometimes|exists:categories,id',
-            'subcategory_id' => 'sometimes|exists:sub_categories,id',
-            'address1' => 'sometimes|string|max:255',
-            'address2' => 'sometimes|nullable|string|max:255',
-            'map_url' => 'sometimes|nullable|string|max:255',
-            'state' => 'sometimes|string|max:255',
-            'city' => 'sometimes|string|max:255',
-            'country' => 'sometimes|string|max:255',
-        
-           'based_area' => 'nullable|string|max:512',
-            'short_description' => 'nullable|string|max:512',
-            'about_title' => 'sometimes|nullable|string|max:255',
-            'text_editor' => 'sometimes|nullable|string',
-            'call_number' => 'sometimes|string|unique:vendors,call_number,' . $id,
-            'whatsapp_number' => 'sometimes|nullable|string|unique:vendors,whatsapp_number,' . $id,
-            'mail_id' => 'sometimes|email|unique:vendors,mail_id,' . $id,
-            'cover_image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-        ]);
+    if (!$vendor) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Vendor not found.'
+        ], 404);
+    }
 
-        // Handle new image upload
-        if ($request->hasFile('cover_image')) {
-            if ($vendor->cover_image) {
-                Storage::disk('public')->delete($vendor->cover_image);
-            }
-            $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
-            $validated['cover_image'] = $imagePath;
+    $validated = $request->validate([
+        'name' => 'sometimes|string|max:255',
+        'category_id' => 'sometimes|exists:categories,id',
+        'subcategory_id' => 'sometimes|exists:sub_categories,id',
+        'address1' => 'sometimes|string|max:255',
+        'address2' => 'sometimes|nullable|string|max:255',
+        'map_url' => 'sometimes|nullable|string|max:255',
+        'state' => 'sometimes|string|max:255',
+        'city' => 'sometimes|string|max:255',
+        'country' => 'sometimes|string|max:255',
+        'based_area' => 'nullable|string|max:512',
+        'short_description' => 'nullable|string|max:512',
+        'about_title' => 'sometimes|nullable|string|max:255',
+        'text_editor' => 'sometimes|nullable|string',
+        'call_number' => 'sometimes|string|unique:vendors,call_number,' . $id,
+        'whatsapp_number' => 'sometimes|nullable|string|unique:vendors,whatsapp_number,' . $id,
+        'mail_id' => 'sometimes|email|unique:vendors,mail_id,' . $id,
+        'cover_image' => 'sometimes|nullable|image|mimes:jpg,png,jpeg|max:2048',
+    ]);
+
+    // Image handling
+    if ($request->hasFile('cover_image')) {
+        if ($vendor->cover_image) {
+            $oldImagePath = str_replace('storage/', '', $vendor->cover_image);
+            Storage::disk('public')->delete($oldImagePath);
         }
 
-        $vendor->update($validated);
-        return response()->json($vendor);
+        $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
+        $validated['cover_image'] = 'storage/' . $imagePath;
     }
+
+    // Optional slug generation based on vendor name
+    if (isset($validated['name'])) {
+        $validated['slug'] = Str::slug($validated['name']);
+    }
+
+    $vendor->update($validated);
+
+    // Return full image URL if exists
+    if ($vendor->cover_image) {
+        $vendor->cover_image = url($vendor->cover_image);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Vendor updated successfully.',
+        'data' => $vendor
+    ], 200);
+}
 
     // Delete vendor and remove image
     public function destroy($id)
