@@ -91,7 +91,7 @@ class SubCategoryController extends Controller
   // Fetch subcategories with vendors
   public function fetchAll()
   {
-      $baseUrl = 'https://api.weddingzadda.com/storage/';
+      $baseUrl = 'https://api.weddingzadda.com/';
 
       $subcategories = SubCategory::with('vendors')->get()->map(function ($subcategory) use ($baseUrl) {
           return [
