@@ -100,7 +100,7 @@ Route::post('/subcategories', [SubCategoryController::class, 'store']);
 Route::get('/subcategories/{subcategory}', [SubCategoryController::class, 'show']);
 
 // Update a subcategory by ID
-Route::put('/subcategories/{subcategory}', [SubCategoryController::class, 'update']);
+Route::post('/subcategories/{subcategory}', [SubCategoryController::class, 'update']);
 
 // Delete a subcategory by ID
 Route::delete('/subcategories/{subcategory}', [SubCategoryController::class, 'destroy']);

@@ -157,49 +157,69 @@ class SubCategoryController extends Controller
         return response()->json($subcategory);
     }
 
-       public function update(Request $request, SubCategory $subcategory)
+    public function update(Request $request, $id): JsonResponse
     {
-        try {
-            // Validate request data
-            $validatedData = $request->validate([
-                'category_id' => 'sometimes|required|integer|exists:categories,id',
-                'name' => 'sometimes|required|string|max:255',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                'description' => 'nullable|string',
-            ]);
-
-            // Generate slug if name is provided
-            if ($request->has('name')) {
-                $validatedData['slug'] = Str::slug($request->name);
-            }
-
-            // Handle image upload if a new image is present
-            if ($request->hasFile('image')) {
-                // Delete the old image if it exists
-                if ($subcategory->image) {
-                    Storage::disk('public')->delete($subcategory->image);
-                }
-                $path = $request->file('image')->store('subcategories', 'public');
-                $validatedData['image'] = $path;
-            }
-
-            // Update the subcategory
-            $subcategory->update($validatedData);
-
-            // Return JSON response
+        $subcategory = SubCategory::find($id);
+    
+        if (!$subcategory) {
             return response()->json([
-                'message' => 'Subcategory updated successfully',
-                'subcategory' => $subcategory
-            ]);
-
-        } catch (ValidationException $e) {
-            // Ensure validation errors return JSON
-            throw new HttpResponseException(response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422));
+                'success' => false,
+                'message' => 'Subcategory not found.'
+            ], 404);
         }
+    
+        $validated = $request->validate([
+            'category_id' => 'sometimes|required|integer|exists:categories,id',
+            'name' => 'sometimes|required|string|max:255',
+            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'description' => 'sometimes|nullable|string',
+        ]);
+    
+        // Optional: Check for duplicate subcategory name under the same category
+        if (isset($validated['name']) && isset($validated['category_id'])) {
+            $existing = SubCategory::where('name', $validated['name'])
+                ->where('category_id', $validated['category_id'])
+                ->where('id', '!=', $id)
+                ->first();
+    
+            if ($existing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Subcategory with this name already exists under the selected category.'
+                ], 422);
+            }
+        }
+    
+        // Generate slug if name is present
+        if (isset($validated['name'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+    
+        // Image upload handling
+        if ($request->hasFile('image')) {
+            if ($subcategory->image) {
+                $oldImagePath = str_replace('storage/', '', $subcategory->image);
+                Storage::disk('public')->delete($oldImagePath);
+            }
+    
+            $imagePath = $request->file('image')->store('subcategories', 'public');
+            $validated['image'] = 'storage/' . $imagePath;
+        }
+    
+        $subcategory->update($validated);
+    
+        // Append base URL to image
+        if ($subcategory->image) {
+            $subcategory->image = url($subcategory->image);
+        }
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Subcategory updated successfully.',
+            'data' => $subcategory
+        ], 200);
     }
+    
        
     
     
