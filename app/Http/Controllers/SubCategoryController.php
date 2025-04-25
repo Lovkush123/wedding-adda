@@ -114,38 +114,55 @@ class SubCategoryController extends Controller
       return response()->json($subcategories);
   }
     // Store a newly created resource in storage
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         try {
-            // Validate request data (removed 'exists:categories,id')
+            // Validate request data
             $validatedData = $request->validate([
-                'category_id' => 'required|integer', // No more "exists" validation
+                'category_id' => 'required|integer',
                 'name' => 'required|string|max:255',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
                 'description' => 'nullable|string',
             ]);
     
-            // Generate slug
-            $validatedData['slug'] = Str::slug($request->name);
+            // Check for duplicate subcategory name under the same category
+            $existingSubcategory = SubCategory::where('name', $validatedData['name'])
+                ->where('category_id', $validatedData['category_id'])
+                ->first();
     
-            // Handle image upload if present
-            if ($request->hasFile('image')) {
-                $path = $request->file('image')->store('subcategories', 'public');
-                $validatedData['image'] = $path;
+            if ($existingSubcategory) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The subcategory name already exists for this category.'
+                ], 422);
             }
     
-            // Create the subcategory
+            // Generate slug
+            $validatedData['slug'] = Str::slug($validatedData['name']);
+    
+            // Image upload handling
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('subcategories', 'public');
+                $validatedData['image'] = 'storage/' . $imagePath;
+            }
+    
+            // Create subcategory
             $subcategory = SubCategory::create($validatedData);
     
-            // Return JSON response
+            // Append full image URL if exists
+            if ($subcategory->image) {
+                $subcategory->image = $this->baseUrl . $subcategory->image;
+            }
+    
             return response()->json([
+                'success' => true,
                 'message' => 'Subcategory created successfully',
                 'subcategory' => $subcategory
             ], 201);
     
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Ensure validation errors return JSON
             throw new HttpResponseException(response()->json([
+                'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $e->errors(),
             ], 422));

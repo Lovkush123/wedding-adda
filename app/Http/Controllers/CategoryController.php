@@ -48,26 +48,70 @@ class CategoryController extends Controller
 
     
     // Store a newly created category
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'description' => 'nullable|string',
-            'service_id' => 'required|integer',
-        ]);
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'name' => 'required|string|max:255',
+    //         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    //         'description' => 'nullable|string',
+    //         'service_id' => 'required|integer',
+    //     ]);
 
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->name);
+    //     $data = $request->all();
+    //     $data['slug'] = Str::slug($request->name);
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('categories', 'public');
-            $data['image'] = $path;
-        }
+    //     if ($request->hasFile('image')) {
+    //         $path = $request->file('image')->store('categories', 'public');
+    //         $data['image'] = $path;
+    //     }
 
-        $category = Category::create($data);
-        return response()->json($category, 201);
+    //     $category = Category::create($data);
+    //     return response()->json($category, 201);
+    // }
+
+    public function store(Request $request): JsonResponse
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'description' => 'nullable|string',
+        'service_id' => 'required|integer|exists:services,id',
+    ]);
+
+    // Check for duplicate category name for the same service_id
+    $existingCategory = Category::where('name', $validated['name'])
+        ->where('service_id', $validated['service_id'])
+        ->first();
+
+    if ($existingCategory) {
+        return response()->json([
+            'success' => false,
+            'message' => 'The category name already exists for this service.'
+        ], 422);
     }
+
+    // Generate slug
+    $validated['slug'] = Str::slug($validated['name']);
+
+    // Image handling
+    if ($request->hasFile('image')) {
+        $imagePath = $request->file('image')->store('categories', 'public');
+        $validated['image'] = 'storage/' . $imagePath;
+    }
+
+    $category = Category::create($validated);
+
+    // Append full image URL if needed
+    if ($category->image) {
+        $category->image = $this->baseUrl . $category->image;
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Category created successfully.',
+        'data' => $category
+    ], 201);
+}
 
     public function show()
 {
