@@ -118,7 +118,7 @@ Route::get('/vendors/{id?}', [VendorController::class, 'fetchVendorDetails']);
 Route::post('/vendors', [VendorController::class, 'store']);
 
 // Update a vendor by ID
-Route::put('/vendors/{id}', [VendorController::class, 'update']);
+Route::post('/vendors/{id}', [VendorController::class, 'update']);
 
 // Delete a vendor by ID
 Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
