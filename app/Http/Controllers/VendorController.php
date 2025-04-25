@@ -353,48 +353,70 @@ public function update(Request $request, $id): JsonResponse
 
 
 
-    public function getVendorBySlugs($category_slug, $subcategory_slug, $vendor_slug)
+    public function fetchBySlugs($category_slug, $subcategory_slug = null, $vendor_slug = null)
     {
-        $category = Category::where('slug', $category_slug)->first();
+        $category = Category::where('slug', $category_slug)
+            ->select('id', 'name', 'slug', 'image', 'description')
+            ->first();
     
         if (!$category) {
             return response()->json(['error' => 'Category not found'], 404);
         }
     
-        $subcategory = $category->subcategories()->where('slug', $subcategory_slug)->first();
+        // Case 1: Only category slug
+        if (!$subcategory_slug && !$vendor_slug) {
+            $category->load([
+                'subcategories:id,category_id,name,slug,image,description',
+                'subcategories.vendors' => function ($query) {
+                    $query->select(
+                        'id', 'name', 'slug', 'category_id', 'subcategory_id', 'address1',
+                        'address2', 'map_url', 'state', 'city', 'country', 'based_area',
+                        'short_description', 'about_title', 'text_editor', 'call_number',
+                        'whatsapp_number', 'mail_id', 'cover_image'
+                    );
+                }
+            ]);
+            return response()->json(['category' => $category]);
+        }
+    
+        $subcategory = $category->subcategories()
+            ->where('slug', $subcategory_slug)
+            ->select('id', 'name', 'slug', 'category_id', 'image', 'description')
+            ->first();
     
         if (!$subcategory) {
             return response()->json(['error' => 'Subcategory not found'], 404);
         }
     
+        // Case 2: Category + Subcategory slugs
+        if (!$vendor_slug) {
+            $subcategory->load([
+                'vendors' => function ($query) {
+                    $query->select(
+                        'id', 'name', 'slug', 'category_id', 'subcategory_id', 'address1',
+                        'address2', 'map_url', 'state', 'city', 'country', 'based_area',
+                        'short_description', 'about_title', 'text_editor', 'call_number',
+                        'whatsapp_number', 'mail_id', 'cover_image'
+                    );
+                }
+            ]);
+            return response()->json(['subcategory' => $subcategory]);
+        }
+    
+        // Case 3: Category + Subcategory + Vendor slugs
         $vendor = $subcategory->vendors()
             ->where('slug', $vendor_slug)
+            ->select(
+                'id', 'name', 'slug', 'category_id', 'subcategory_id', 'address1', 'address2',
+                'map_url', 'state', 'city', 'country', 'based_area', 'short_description',
+                'about_title', 'text_editor', 'call_number', 'whatsapp_number', 'mail_id',
+                'cover_image'
+            )
             ->with([
                 'images:id,vendor_id,image',
                 'features:id,vendor_id,title,description',
                 'pricing:id,vendor_id,price,price_name,price_type,price_category'
             ])
-            ->select(
-                'id',
-                'name',
-                'slug',
-                'category_id',
-                'subcategory_id',
-                'address1',
-                'address2',
-                'map_url',
-                'state',
-                'city',
-                'country',
-                'based_area',
-                'short_description',
-                'about_title',
-                'text_editor',
-                'call_number',
-                'whatsapp_number',
-                'mail_id',
-                'cover_image'
-            )
             ->first();
     
         if (!$vendor) {
@@ -403,6 +425,7 @@ public function update(Request $request, $id): JsonResponse
     
         return response()->json(['vendor' => $vendor]);
     }
+    
     
 
 }
