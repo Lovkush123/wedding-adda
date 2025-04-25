@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use App\Models\SubCategory;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log; // For Debugging
-
+use Illuminate\Http\JsonResponse;
 
 class SubCategoryController extends Controller
 {
