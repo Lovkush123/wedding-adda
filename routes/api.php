@@ -80,7 +80,7 @@ Route::post('/categories', [CategoryController::class, 'store']);
 Route::get('/categoriesNEW', [CategoryController::class, 'show']);
 
 // Update a category by ID
-Route::patch('/categories/{id}', [CategoryController::class, 'update']);
+Route::post('/categories/{id}', [CategoryController::class, 'update']);
 
 // Delete a category by ID
 Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
