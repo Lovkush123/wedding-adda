@@ -353,81 +353,8 @@ public function update(Request $request, $id): JsonResponse
 
 
 
-//     public function fetchBySlugs($category_slug, $subcategory_slug = null, $vendor_slug = null)
-// {
-//     $category = Category::where('slug', $category_slug)
-//         ->select('id', 'name', 'slug', 'image', 'description')
-//         ->first();
-
-//     if (!$category) {
-//         return response()->json(['error' => 'Category not found'], 404);
-//     }
-
-//     // Case 1: Only category slug
-//     if (!$subcategory_slug && !$vendor_slug) {
-//         $category->load([
-//             'subcategories:id,category_id,name,slug,image,description',
-//             'subcategories.vendors' => function ($query) {
-//                 $query->select(
-//                     'id', 'name', 'slug', 'category_id', 'subcategory_id', 'address1',
-//                     'address2', 'map_url', 'state', 'city', 'country', 'based_area',
-//                     'short_description', 'about_title', 'text_editor', 'call_number',
-//                     'whatsapp_number', 'mail_id', 'cover_image'
-//                 );
-//             }
-//         ]);
-//         return response()->json(['category' => $category]);
-//     }
-
-//     $subcategory = $category->subcategories()
-//         ->where('slug', $subcategory_slug)
-//         ->select('id', 'name', 'slug', 'category_id', 'image', 'description')
-//         ->first();
-
-//     if (!$subcategory) {
-//         return response()->json(['error' => 'Subcategory not found'], 404);
-//     }
-
-//     // Case 2: Category + Subcategory slugs
-//     if (!$vendor_slug) {
-//         $subcategory->load([
-//             'vendors' => function ($query) {
-//                 $query->select(
-//                     'id', 'name', 'slug', 'category_id', 'subcategory_id', 'address1',
-//                     'address2', 'map_url', 'state', 'city', 'country', 'based_area',
-//                     'short_description', 'about_title', 'text_editor', 'call_number',
-//                     'whatsapp_number', 'mail_id', 'cover_image'
-//                 );
-//             }
-//         ]);
-//         return response()->json(['subcategory' => $subcategory]);
-//     }
-
-//     // Case 3: Category + Subcategory + Vendor slugs
-//     $vendor = $subcategory->vendors()
-//         ->where('slug', $vendor_slug)
-//         ->select(
-//             'id', 'name', 'slug', 'category_id', 'subcategory_id', 'address1', 'address2',
-//             'map_url', 'state', 'city', 'country', 'based_area', 'short_description',
-//             'about_title', 'text_editor', 'call_number', 'whatsapp_number', 'mail_id',
-//             'cover_image'
-//         )
-//         ->with([
-//             'images:id,vendor_id,image',
-//             'features:id,vendor_id,title,description',
-//             'pricing:id,vendor_id,price,price_name,price_type,price_category'
-//         ])
-//         ->first();
-
-//     if (!$vendor) {
-//         return response()->json(['error' => 'Vendor not found'], 404);
-//     }
-
-//     return response()->json(['vendor' => $vendor]);
-// }
-public function handleFlexibleFetch($category_slug, $subcategory_slug = null, $vendor_or_all = null)
+    public function fetchBySlugs($category_slug, $subcategory_slug = null, $vendor_slug = null)
 {
-    // Find the category by slug
     $category = Category::where('slug', $category_slug)
         ->select('id', 'name', 'slug', 'image', 'description')
         ->first();
@@ -436,13 +363,8 @@ public function handleFlexibleFetch($category_slug, $subcategory_slug = null, $v
         return response()->json(['error' => 'Category not found'], 404);
     }
 
-    // Case 1: /category_slug
-    if (!$subcategory_slug && !$vendor_or_all) {
-        return response()->json(['category' => $category]);
-    }
-
-    // Case 2: /category_slug/all
-    if ($subcategory_slug === 'all') {
+    // Case 1: Only category slug
+    if (!$subcategory_slug && !$vendor_slug) {
         $category->load([
             'subcategories:id,category_id,name,slug,image,description',
             'subcategories.vendors' => function ($query) {
@@ -457,7 +379,6 @@ public function handleFlexibleFetch($category_slug, $subcategory_slug = null, $v
         return response()->json(['category' => $category]);
     }
 
-    // Get subcategory from category
     $subcategory = $category->subcategories()
         ->where('slug', $subcategory_slug)
         ->select('id', 'name', 'slug', 'category_id', 'image', 'description')
@@ -467,13 +388,8 @@ public function handleFlexibleFetch($category_slug, $subcategory_slug = null, $v
         return response()->json(['error' => 'Subcategory not found'], 404);
     }
 
-    // Case 3: /category_slug/subcategory_slug
-    if (!$vendor_or_all) {
-        return response()->json(['subcategory' => $subcategory]);
-    }
-
-    // Case 4: /category_slug/subcategory_slug/all
-    if ($vendor_or_all === 'all') {
+    // Case 2: Category + Subcategory slugs
+    if (!$vendor_slug) {
         $subcategory->load([
             'vendors' => function ($query) {
                 $query->select(
@@ -487,9 +403,9 @@ public function handleFlexibleFetch($category_slug, $subcategory_slug = null, $v
         return response()->json(['subcategory' => $subcategory]);
     }
 
-    // Case 5: /category_slug/subcategory_slug/vendor_slug
+    // Case 3: Category + Subcategory + Vendor slugs
     $vendor = $subcategory->vendors()
-        ->where('slug', $vendor_or_all)
+        ->where('slug', $vendor_slug)
         ->select(
             'id', 'name', 'slug', 'category_id', 'subcategory_id', 'address1', 'address2',
             'map_url', 'state', 'city', 'country', 'based_area', 'short_description',
@@ -509,6 +425,5 @@ public function handleFlexibleFetch($category_slug, $subcategory_slug = null, $v
 
     return response()->json(['vendor' => $vendor]);
 }
-
 
 }
