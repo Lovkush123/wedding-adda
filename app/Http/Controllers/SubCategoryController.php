@@ -116,6 +116,8 @@ class SubCategoryController extends Controller
     // Store a newly created resource in storage
     public function store(Request $request): JsonResponse
     {
+        $baseUrl = 'https://api.weddingzadda.com/';
+        
         try {
             // Validate request data
             $validatedData = $request->validate([
@@ -151,7 +153,7 @@ class SubCategoryController extends Controller
     
             // Append full image URL if exists
             if ($subcategory->image) {
-                $subcategory->image = $this->baseUrl . $subcategory->image;
+                $subcategory->image = $baseUrl . $subcategory->image;
             }
     
             return response()->json([
@@ -168,6 +170,7 @@ class SubCategoryController extends Controller
             ], 422));
         }
     }
+    
     // Display the specified resource
     public function show(SubCategory $subcategory)
     {

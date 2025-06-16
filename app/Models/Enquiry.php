@@ -9,5 +9,12 @@ class Enquiry extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'number', 'email', 'description'];
+    protected $table = 'enquiry'; // explicitly define since it's not plural
+
+    protected $fillable = [
+        'user_id',
+        'vander_id',
+        'enquiry_type',
+        'note',
+    ];
 }

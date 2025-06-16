@@ -16,15 +16,15 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\GroupController;
 use Illuminate\Support\Facades\Route;
-
 
 Route::get('/users', [UserController::class, 'index']); // Get all users
 Route::post('/users', [UserController::class, 'store']); // Create a user
 Route::get('/users/{id}', [UserController::class, 'show']); // Get a single user
 Route::put('/users/{id}', [UserController::class, 'update']); // Update a user
 Route::delete('/users/{id}', [UserController::class, 'destroy']); // Delete a user
-
+ Route::post('/login', [UserController::class, 'login']);   // Login user
 
 Route::get('/addresses', [AddressController::class, 'index']); // Fetch all addresses
 Route::post('/addresses', [AddressController::class, 'store']); // Create a new address
@@ -57,20 +57,20 @@ Route::put('/gallery/{gallery}', [GalleryController::class, 'update']);
 Route::delete('/gallery/{gallery}', [GalleryController::class, 'destroy']);
 
 
-// Create an enquiry
-Route::post('/enquiries', [EnquiryController::class, 'store']);
+// // Create an enquiry
+// Route::post('/enquiries', [EnquiryController::class, 'store']);
 
-// Get all enquiries
-Route::get('/enquiries', [EnquiryController::class, 'index']);
+// // Get all enquiries
+// Route::get('/enquiries', [EnquiryController::class, 'index']);
 
-// Get a single enquiry
-Route::get('/enquiries/{id}', [EnquiryController::class, 'show']);
+// // Get a single enquiry
+// Route::get('/enquiries/{id}', [EnquiryController::class, 'show']);
 
-// Update an enquiry
-Route::put('/enquiries/{id}', [EnquiryController::class, 'update']);
+// // Update an enquiry
+// Route::put('/enquiries/{id}', [EnquiryController::class, 'update']);
 
-// Delete an enquiry
-Route::delete('/enquiries/{id}', [EnquiryController::class, 'destroy']);
+// // Delete an enquiry
+// Route::delete('/enquiries/{id}', [EnquiryController::class, 'destroy']);
 
 
 
@@ -126,6 +126,9 @@ Route::post('/vendors/{id}', [VendorController::class, 'update']);
 
 // Delete a vendor by ID
 Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
+Route::get('/vendors', [VendorController::class, 'getVendorData']);
+Route::get('/cities', [VendorController::class, 'getUniqueCities']);
+Route::get('/filter-vendors', [VendorController::class, 'filterVendors']);
 Route::get('{category_slug}/{subcategory_slug?}/{vendor_slug?}', [VendorController::class, 'fetchBySlugs']);
 
 // Get all features
@@ -194,8 +197,8 @@ Route::get('/communities/{id}', [CommunityController::class, 'show']);
 Route::post('/communities', [CommunityController::class, 'store']);
 
 // Update a community by ID
-Route::put('/communities/{id}', [CommunityController::class, 'update']);
-// Route::patch('/communities/{id}', [CommunityController::class, 'update']); // Optional for partial updates
+Route::post('/communities/{id}', [CommunityController::class, 'update']);
+Route::patch('/communities/{id}', [CommunityController::class, 'update']); // Optional for partial updates
 
 // Delete a community by ID
 Route::delete('/communities/{id}', [CommunityController::class, 'destroy']);
@@ -215,3 +218,38 @@ Route::patch('/ratings/{id}', [RatingController::class, 'update']);
 
 // Delete a rating by ID
 Route::delete('/ratings/{id}', [RatingController::class, 'destroy']);
+// List all enquiries
+Route::get('/enquiries', [EnquiryController::class, 'index']);
+
+// Create a new enquiry
+Route::post('/enquiries', [EnquiryController::class, 'store']);
+
+// Get a specific enquiry by ID
+Route::get('/enquiries/{id}', [EnquiryController::class, 'show']);
+
+// Update an enquiry by ID
+Route::put('/enquiries/{id}', [EnquiryController::class, 'update']);
+Route::patch('/enquiries/{id}', [EnquiryController::class, 'update']); // Optional for partial updates
+
+// Delete an enquiry by ID
+Route::delete('/enquiries/{id}', [EnquiryController::class, 'destroy']);
+// 1. Route to show all groups (the index page)
+Route::get('/groups', [GroupController::class, 'index'])->name('groups.index');
+
+// 2. Route to show the form for creating a new group
+Route::get('/groups/create', [GroupController::class, 'create'])->name('groups.create');
+
+// 3. Route to store a new group in the database
+Route::post('/groups', [GroupController::class, 'store'])->name('groups.store');
+
+// 4. Route to display a specific group
+Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
+
+// 5. Route to show the form for editing a group
+Route::get('/groups/{group}/edit', [GroupController::class, 'edit'])->name('groups.edit');
+
+// 6. Route to update a specific group in the database
+Route::put('/groups/{group}', [GroupController::class, 'update'])->name('groups.update');
+
+// 7. Route to delete a specific group
+Route::delete('/groups/{group}', [GroupController::class, 'destroy'])->name('groups.destroy');

@@ -2,123 +2,123 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Community;
+use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
-class CommunityController extends Controller
+class GroupController extends Controller
 {
     /**
-     * Display a listing of the communities.
+     * Display a listing of the groups.
      */
     public function index()
     {
-        $communities = Community::all()->map(function ($community) {
-            $community->image_url = $community->image ? url($community->image) : null;
-            return $community;
+        $groups = Group::all()->map(function ($group) {
+            $group->image_url = $group->image ? url($group->image) : null;
+            return $group;
         });
 
-        return response()->json($communities);
+        return response()->json($groups);
     }
 
     /**
-     * Store a newly created community in storage.
+     * Store a newly created group in storage.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|unique:communities,slug',
+            'name'        => 'required|string|max:255',
+            'slug'        => 'nullable|string|unique:groups,slug',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
+            'type'        => 'nullable|string|max:100',
         ]);
 
-        $slug = $request->slug ?? Str::slug($request->name);
+        $validated['slug'] = $request->slug ?? Str::slug($request->name);
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('communities', 'public');
-            $validated['image'] = 'storage/' . $imagePath;
+            $path = $request->file('image')->store('groups', 'public');
+            $validated['image'] = 'storage/' . $path;
         }
 
-        $validated['slug'] = $slug;
-
-        $community = Community::create($validated);
-        $community->image_url = $community->image ? url($community->image) : null;
+        $group = Group::create($validated);
+        $group->image_url = $group->image ? url($group->image) : null;
 
         return response()->json([
-            'message' => 'Community created successfully.',
-            'data' => $community,
+            'message' => 'Group created successfully.',
+            'data'    => $group,
         ], 201);
     }
 
     /**
-     * Display the specified community.
+     * Display the specified group.
      */
     public function show($id)
     {
-        $community = Community::find($id);
-        if (!$community) {
-            return response()->json(['message' => 'Community not found'], 404);
+        $group = Group::find($id);
+        if (!$group) {
+            return response()->json(['message' => 'Group not found'], 404);
         }
 
-        $community->image_url = $community->image ? url($community->image) : null;
-        return response()->json($community);
+        $group->image_url = $group->image ? url($group->image) : null;
+        return response()->json($group);
     }
 
     /**
-     * Update the specified community in storage.
+     * Update the specified group in storage.
      */
     public function update(Request $request, $id)
     {
-        $community = Community::find($id);
-        if (!$community) {
-            return response()->json(['message' => 'Community not found'], 404);
+        $group = Group::find($id);
+        if (!$group) {
+            return response()->json(['message' => 'Group not found'], 404);
         }
 
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'slug' => 'nullable|string|unique:communities,slug,' . $id,
+            'name'        => 'sometimes|required|string|max:255',
+            'slug'        => 'nullable|string|unique:groups,slug,' . $id,
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
+            'type'        => 'nullable|string|max:100',
         ]);
 
         if ($request->hasFile('image')) {
-            if ($community->image && Storage::disk('public')->exists(str_replace('storage/', '', $community->image))) {
-                Storage::disk('public')->delete(str_replace('storage/', '', $community->image));
+            if ($group->image && Storage::disk('public')->exists(str_replace('storage/', '', $group->image))) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $group->image));
             }
 
-            $imagePath = $request->file('image')->store('communities', 'public');
-            $validated['image'] = 'storage/' . $imagePath;
+            $path = $request->file('image')->store('groups', 'public');
+            $validated['image'] = 'storage/' . $path;
         }
 
-        $validated['slug'] = $request->slug ?? Str::slug($request->name ?? $community->name);
+        $validated['slug'] = $request->slug ?? Str::slug($request->name ?? $group->name);
 
-        $community->update($validated);
-        $community->image_url = $community->image ? url($community->image) : null;
+        $group->update($validated);
+        $group->image_url = $group->image ? url($group->image) : null;
 
         return response()->json([
-            'message' => 'Community updated successfully.',
-            'data' => $community,
+            'message' => 'Group updated successfully.',
+            'data'    => $group,
         ]);
     }
 
     /**
-     * Remove the specified community from storage.
+     * Remove the specified group from storage.
      */
     public function destroy($id)
     {
-        $community = Community::find($id);
-        if (!$community) {
-            return response()->json(['message' => 'Community not found'], 404);
+        $group = Group::find($id);
+        if (!$group) {
+            return response()->json(['message' => 'Group not found'], 404);
         }
 
-        if ($community->image && Storage::disk('public')->exists(str_replace('storage/', '', $community->image))) {
-            Storage::disk('public')->delete(str_replace('storage/', '', $community->image));
+        if ($group->image && Storage::disk('public')->exists(str_replace('storage/', '', $group->image))) {
+            Storage::disk('public')->delete(str_replace('storage/', '', $group->image));
         }
 
-        $community->delete();
+        $group->delete();
 
-        return response()->json(['message' => 'Community deleted successfully']);
+        return response()->json(['message' => 'Group deleted successfully.']);
     }
 }

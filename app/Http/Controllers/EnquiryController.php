@@ -7,28 +7,31 @@ use Illuminate\Http\Request;
 
 class EnquiryController extends Controller
 {
-    // Store a new enquiry
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'number' => 'required|string|max:20',
-            'email' => 'required|email|unique:enquiries',
-            'description' => 'required|string',
-        ]);
-
-        $enquiry = Enquiry::create($request->all());
-
-        return response()->json(['message' => 'Enquiry submitted successfully', 'enquiry' => $enquiry], 201);
-    }
-
-    // Get all enquiries
+    // Show all enquiries
     public function index()
     {
         return response()->json(Enquiry::all());
     }
 
-    // Get a single enquiry
+    // Store a new enquiry
+    public function store(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'vander_id' => 'required|integer',
+            'enquiry_type' => 'required|string|max:100',
+            'note' => 'nullable|string',
+        ]);
+
+        $enquiry = Enquiry::create($request->all());
+
+        return response()->json([
+            'message' => 'Enquiry created successfully',
+            'data' => $enquiry,
+        ], 201);
+    }
+
+    // Show a specific enquiry
     public function show($id)
     {
         $enquiry = Enquiry::find($id);
@@ -40,7 +43,7 @@ class EnquiryController extends Controller
         return response()->json($enquiry);
     }
 
-    // Update an enquiry
+    // Update a specific enquiry
     public function update(Request $request, $id)
     {
         $enquiry = Enquiry::find($id);
@@ -51,10 +54,13 @@ class EnquiryController extends Controller
 
         $enquiry->update($request->all());
 
-        return response()->json(['message' => 'Enquiry updated successfully', 'enquiry' => $enquiry]);
+        return response()->json([
+            'message' => 'Enquiry updated successfully',
+            'data' => $enquiry,
+        ]);
     }
 
-    // Delete an enquiry
+    // Delete a specific enquiry
     public function destroy($id)
     {
         $enquiry = Enquiry::find($id);
@@ -68,4 +74,3 @@ class EnquiryController extends Controller
         return response()->json(['message' => 'Enquiry deleted successfully']);
     }
 }
-
