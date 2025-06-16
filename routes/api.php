@@ -13,7 +13,11 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\RatingController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/users', [UserController::class, 'index']); // Get all users
 Route::post('/users', [UserController::class, 'store']); // Create a user
@@ -164,3 +168,50 @@ Route::patch('/reviews/{id}', [ReviewController::class, 'update']); // Optional:
 
 // Delete a review by ID
 Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
+
+Route::get('/blogs', [BlogController::class, 'index']);
+
+// Get a single blog by ID
+Route::get('/blogs/{id}', [BlogController::class, 'show']);
+
+// Create a new blog
+Route::post('/blogs', [BlogController::class, 'store']);
+
+// Update an existing blog
+Route::put('/blogs/{id}', [BlogController::class, 'update']);
+
+// Delete a blog
+Route::delete('/blogs/{id}', [BlogController::class, 'destroy']);
+
+
+// Get all communities
+Route::get('/communities', [CommunityController::class, 'index']);
+
+// Get a single community by ID
+Route::get('/communities/{id}', [CommunityController::class, 'show']);
+
+// Create a new community
+Route::post('/communities', [CommunityController::class, 'store']);
+
+// Update a community by ID
+Route::put('/communities/{id}', [CommunityController::class, 'update']);
+// Route::patch('/communities/{id}', [CommunityController::class, 'update']); // Optional for partial updates
+
+// Delete a community by ID
+Route::delete('/communities/{id}', [CommunityController::class, 'destroy']);
+
+// Get all ratings
+Route::get('/ratings', [RatingController::class, 'index']);
+
+// Get a single rating by ID
+Route::get('/ratings/{id}', [RatingController::class, 'show']);
+
+// Create a new rating
+Route::post('/ratings', [RatingController::class, 'store']);
+
+// Update a rating by ID
+Route::put('/ratings/{id}', [RatingController::class, 'update']);
+Route::patch('/ratings/{id}', [RatingController::class, 'update']);
+
+// Delete a rating by ID
+Route::delete('/ratings/{id}', [RatingController::class, 'destroy']);
