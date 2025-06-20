@@ -57,23 +57,22 @@ Route::put('/gallery/{gallery}', [GalleryController::class, 'update']);
 Route::delete('/gallery/{gallery}', [GalleryController::class, 'destroy']);
 
 
-// // Create an enquiry
-// Route::post('/enquiries', [EnquiryController::class, 'store']);
 
-// // Get all enquiries
-// Route::get('/enquiries', [EnquiryController::class, 'index']);
+// Get all communities
+Route::get('/communities', [CommunityController::class, 'index']);
 
-// // Get a single enquiry
-// Route::get('/enquiries/{id}', [EnquiryController::class, 'show']);
+// Get a single community by ID
+Route::get('/communities/{id}', [CommunityController::class, 'show']);
 
-// // Update an enquiry
-// Route::put('/enquiries/{id}', [EnquiryController::class, 'update']);
+// Create a new community
+Route::post('/communities', [CommunityController::class, 'store']);
 
-// // Delete an enquiry
-// Route::delete('/enquiries/{id}', [EnquiryController::class, 'destroy']);
+// Update a community by ID
+Route::post('/communities/{id}', [CommunityController::class, 'update']);
+Route::patch('/communities/{id}', [CommunityController::class, 'update']); // Optional for partial updates
 
-
-
+// Delete a community by ID
+Route::delete('/communities/{id}', [CommunityController::class, 'destroy']);
 // Get all categories
 Route::get('/categories', [CategoryController::class, 'index']);
 
@@ -129,7 +128,7 @@ Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
 Route::get('/vendors', [VendorController::class, 'getVendorData']);
 Route::get('/cities', [VendorController::class, 'getUniqueCities']);
 Route::get('/filter-vendors', [VendorController::class, 'filterVendors']);
-Route::get('{category_slug}/{subcategory_slug?}/{vendor_slug?}', [VendorController::class, 'fetchBySlugs']);
+Route::get('/slug/{category_slug}/{subcategory_slug?}/{vendor_slug?}', [VendorController::class, 'fetchBySlugs']);
 
 // Get all features
 Route::get('/features', [FeatureController::class, 'index']);
@@ -187,21 +186,6 @@ Route::put('/blogs/{id}', [BlogController::class, 'update']);
 Route::delete('/blogs/{id}', [BlogController::class, 'destroy']);
 
 
-// Get all communities
-Route::get('/communities', [CommunityController::class, 'index']);
-
-// Get a single community by ID
-Route::get('/communities/{id}', [CommunityController::class, 'show']);
-
-// Create a new community
-Route::post('/communities', [CommunityController::class, 'store']);
-
-// Update a community by ID
-Route::post('/communities/{id}', [CommunityController::class, 'update']);
-Route::patch('/communities/{id}', [CommunityController::class, 'update']); // Optional for partial updates
-
-// Delete a community by ID
-Route::delete('/communities/{id}', [CommunityController::class, 'destroy']);
 
 // Get all ratings
 Route::get('/ratings', [RatingController::class, 'index']);
