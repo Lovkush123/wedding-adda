@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
+
 class VendorController extends Controller
 {
  
@@ -33,8 +34,328 @@ class VendorController extends Controller
             return response()->json(['message' => 'Could not fetch cities', 'error' => $e->getMessage()], 500);
         }
     }
+    
 
-    public function fetchVendorDetails($id = null)
+    public function filterVendors(Request $request): JsonResponse
+{
+    $categoryName = $request->query('category');
+    $subcategoryName = $request->query('subcategory');
+    $city = $request->query('city');
+    $state = $request->query('state');
+    $search = $request->query('search');
+    $communityId = $request->query('community_id'); // NEW FILTER
+    $limit = $request->query('limit', 10);
+    $page = $request->query('page', 1);
+
+    $vendorsQuery = Vendor::query()
+        ->select(
+            'id', 'name', 'slug', 'category_id', 'subcategory_id', 'community_id',
+            'address1', 'address2', 'map_url', 'state', 'city', 'country',
+            'based_area', 'short_description', 'about_title', 'text_editor',
+            'call_number', 'whatsapp_number', 'mail_id', 'cover_image', 'user_id'
+        )
+        ->with([
+            'images:id,vendor_id,image',
+            'features:id,vendor_id,title,description',
+            'pricing:id,vendor_id,price,price_name,price_type,price_category'
+        ]);
+
+    // Filter by category name
+    if ($categoryName) {
+        $category = Category::where('name', $categoryName)->first();
+        if (!$category) {
+            return response()->json(['message' => 'Category not found.'], 404);
+        }
+        $vendorsQuery->where('category_id', $category->id);
+    }
+
+    // Filter by subcategory name
+    if ($subcategoryName) {
+        $subCategory = SubCategory::where('name', $subcategoryName)->first();
+        if (!$subCategory) {
+            return response()->json(['message' => 'Subcategory not found.'], 404);
+        }
+        $vendorsQuery->where('subcategory_id', $subCategory->id);
+    }
+
+    // Filter by city
+    if ($city) {
+        $vendorsQuery->where('city', $city);
+    }
+
+    // Filter by state
+    if ($state) {
+        $vendorsQuery->where('state', $state);
+    }
+
+    // Filter by community_id
+    if ($communityId) {
+        $vendorsQuery->whereJsonContains('community_id', (int)$communityId);
+    }
+
+    // Search by vendor name
+    if ($search) {
+        $vendorsQuery->where('name', 'like', '%' . $search . '%');
+    }
+
+    // Paginate
+    $vendors = $vendorsQuery->paginate($limit, ['*'], 'page', $page);
+
+    return response()->json([
+        'filters' => [
+            'category' => $categoryName,
+            'subcategory' => $subcategoryName,
+            'city' => $city,
+            'state' => $state,
+            'search' => $search,
+            'community_id' => $communityId,
+            'limit' => $limit,
+            'page' => $page,
+        ],
+        'vendors' => $vendors
+    ]);
+}
+
+//     public function filterVendors(Request $request): JsonResponse
+// {
+//     $categoryName = $request->query('category');
+//     $subcategoryName = $request->query('subcategory');
+//     $city = $request->query('city');
+//     $state = $request->query('state');
+//     $search = $request->query('search'); // search by vendor name
+//     $limit = $request->query('limit', 10);
+//     $page = $request->query('page', 1);
+
+//     $vendorsQuery = Vendor::query()
+//         ->select(
+//             'id', 'name', 'slug', 'category_id', 'subcategory_id',
+//             'address1', 'address2', 'map_url', 'state', 'city', 'country',
+//             'based_area', 'short_description', 'about_title', 'text_editor',
+//             'call_number', 'whatsapp_number', 'mail_id', 'cover_image','user_id',
+//         )
+//         ->with([
+//             'images:id,vendor_id,image',
+//             'features:id,vendor_id,title,description',
+//             'pricing:id,vendor_id,price,price_name,price_type,price_category'
+//         ]);
+
+//     // Apply filters
+//     if ($categoryName) {
+//         $category = Category::where('name', $categoryName)->first();
+//         if (!$category) {
+//             return response()->json(['message' => 'Category not found.'], 404);
+//         }
+//         $vendorsQuery->where('category_id', $category->id);
+//     }
+
+//     if ($subcategoryName) {
+//         $subCategory = SubCategory::where('name', $subcategoryName)->first();
+//         if (!$subCategory) {
+//             return response()->json(['message' => 'Subcategory not found.'], 404);
+//         }
+//         $vendorsQuery->where('subcategory_id', $subCategory->id);
+//     }
+
+//     if ($city) {
+//         $vendorsQuery->where('city', $city);
+//     }
+
+//     if ($state) {
+//         $vendorsQuery->where('state', $state);
+//     }
+
+//     // Apply search by vendor name
+//     if ($search) {
+//         $vendorsQuery->where('name', 'like', '%' . $search . '%');
+//     }
+
+//     // Apply pagination
+//     $vendors = $vendorsQuery->paginate($limit, ['*'], 'page', $page);
+
+//     return response()->json([
+//         'filters' => [
+//             'category' => $categoryName,
+//             'subcategory' => $subcategoryName,
+//             'city' => $city,
+//             'state' => $state,
+//             'search' => $search,
+//             'limit' => $limit,
+//             'page' => $page,
+//         ],
+//         'vendors' => $vendors
+//     ]);
+// }
+
+// public function filterVendors(Request $request): JsonResponse
+// {
+//     $categoryName = $request->query('category');
+//     $subcategoryName = $request->query('subcategory');
+//     $city = $request->query('city');
+//     $state = $request->query('state');
+//     $search = $request->query('search'); // search by vendor name
+//     $communityId = $request->query('community_id'); // new: filter by community_id
+//     $limit = $request->query('limit', 10);
+//     $page = $request->query('page', 1);
+
+//     $vendorsQuery = Vendor::query()
+//         ->select(
+//             'id', 'name', 'slug', 'category_id', 'subcategory_id',
+//             'address1', 'address2', 'map_url', 'state', 'city', 'country',
+//             'based_area', 'short_description', 'about_title', 'text_editor',
+//             'call_number', 'whatsapp_number', 'mail_id', 'cover_image', 'user_id', 'community_id',
+//         )
+//         ->with([
+//             'images:id,vendor_id,image',
+//             'features:id,vendor_id,title,description',
+//             'pricing:id,vendor_id,price,price_name,price_type,price_category',
+//             'community:id,name,slug,description,image,type' // optional: load community data
+//         ]);
+
+//     // Filter by community_id
+//     if ($communityId) {
+//         $vendorsQuery->where('community_id', $communityId);
+//     }
+
+//     // Filter by category name
+//     if ($categoryName) {
+//         $category = Category::where('name', $categoryName)->first();
+//         if (!$category) {
+//             return response()->json(['message' => 'Category not found.'], 404);
+//         }
+//         $vendorsQuery->where('category_id', $category->id);
+//     }
+
+//     // Filter by subcategory name
+//     if ($subcategoryName) {
+//         $subCategory = SubCategory::where('name', $subcategoryName)->first();
+//         if (!$subCategory) {
+//             return response()->json(['message' => 'Subcategory not found.'], 404);
+//         }
+//         $vendorsQuery->where('subcategory_id', $subCategory->id);
+//     }
+
+//     // Filter by city
+//     if ($city) {
+//         $vendorsQuery->where('city', $city);
+//     }
+
+//     // Filter by state
+//     if ($state) {
+//         $vendorsQuery->where('state', $state);
+//     }
+
+//     // Search by vendor name
+//     if ($search) {
+//         $vendorsQuery->where('name', 'like', '%' . $search . '%');
+//     }
+
+//     // Pagination
+//     $vendors = $vendorsQuery->paginate($limit, ['*'], 'page', $page);
+
+//     return response()->json([
+//         'filters' => [
+//             'category' => $categoryName,
+//             'subcategory' => $subcategoryName,
+//             'city' => $city,
+//             'state' => $state,
+//             'search' => $search,
+//             'community_id' => $communityId,
+//             'limit' => $limit,
+//             'page' => $page,
+//         ],
+//         'vendors' => $vendors
+//     ]);
+// }
+// public function filterVendors(Request $request): JsonResponse
+// {
+//     $categoryName = $request->query('category');
+//     $subcategoryName = $request->query('subcategory');
+//     $city = $request->query('city');
+//     $state = $request->query('state');
+//     $search = $request->query('search');
+//     $communityId = $request->query('community_id'); // now treated as filter on JSON array
+//     $limit = $request->query('limit', 10);
+//     $page = $request->query('page', 1);
+
+//     $vendorsQuery = Vendor::query()
+//         ->select(
+//             'id', 'name', 'slug', 'category_id', 'subcategory_id',
+//             'address1', 'address2', 'map_url', 'state', 'city', 'country',
+//             'based_area', 'short_description', 'about_title', 'text_editor',
+//             'call_number', 'whatsapp_number', 'mail_id', 'cover_image', 'user_id', 'community_id'
+//         )
+//         ->with([
+//             'images:id,vendor_id,image',
+//             'features:id,vendor_id,title,description',
+//             'pricing:id,vendor_id,price,price_name,price_type,price_category',
+//         ]);
+
+//     // ✅ Filter by community_id (as JSON array)
+//     if ($communityId) {
+//         $vendorsQuery->whereJsonContains('community_id', (string) $communityId);
+//     }
+
+//     // ✅ Filter by category name
+//     if ($categoryName) {
+//         $category = Category::where('name', $categoryName)->first();
+//         if (!$category) {
+//             return response()->json(['message' => 'Category not found.'], 404);
+//         }
+//         $vendorsQuery->where('category_id', $category->id);
+//     }
+
+//     // ✅ Filter by subcategory name
+//     if ($subcategoryName) {
+//         $subCategory = SubCategory::where('name', $subcategoryName)->first();
+//         if (!$subCategory) {
+//             return response()->json(['message' => 'Subcategory not found.'], 404);
+//         }
+//         $vendorsQuery->where('subcategory_id', $subCategory->id);
+//     }
+
+//     // ✅ Filter by city
+//     if ($city) {
+//         $vendorsQuery->where('city', $city);
+//     }
+
+//     // ✅ Filter by state
+//     if ($state) {
+//         $vendorsQuery->where('state', $state);
+//     }
+
+//     // ✅ Search by vendor name
+//     if ($search) {
+//         $vendorsQuery->where('name', 'like', '%' . $search . '%');
+//     }
+
+//     // ✅ Paginate
+//     $vendors = $vendorsQuery->paginate($limit, ['*'], 'page', $page);
+
+//     // ✅ Decode community_id JSON to array in each result
+//     $vendors->getCollection()->transform(function ($vendor) {
+//         $vendor->community_id = json_decode($vendor->community_id);
+//         $vendor->cover_image = $vendor->cover_image ? url($vendor->cover_image) : null;
+//         return $vendor;
+//     });
+
+//     return response()->json([
+//         'filters' => [
+//             'category' => $categoryName,
+//             'subcategory' => $subcategoryName,
+//             'city' => $city,
+//             'state' => $state,
+//             'search' => $search,
+//             'community_id' => $communityId,
+//             'limit' => $limit,
+//             'page' => $page,
+//         ],
+//         'vendors' => $vendors
+//     ]);
+// }
+
+
+
+     public function fetchVendorDetails($id = null)
     {
         $query = Vendor::with(['images:id,vendor_id,image', 'features:id,vendor_id,title,description', 'pricing:id,vendor_id,price,price_name,price_type,price_category']);
 
@@ -172,260 +493,6 @@ class VendorController extends Controller
             'vendor' => $vendor
         ]);
     }
-
-// public function filterVendors(Request $request): JsonResponse
-// {
-//     $categoryName = $request->query('category');
-//     $subcategoryName = $request->query('subcategory');
-//     $city = $request->query('city');
-//     $state = $request->query('state');
-
-//     $vendorsQuery = Vendor::query()
-//         ->select(
-//             'id', 'name', 'slug', 'category_id', 'subcategory_id',
-//             'address1', 'address2', 'map_url', 'state', 'city', 'country',
-//             'based_area', 'short_description', 'about_title', 'text_editor',
-//             'call_number', 'whatsapp_number', 'mail_id', 'cover_image'
-//         )
-//         ->with([
-//             'images:id,vendor_id,image',
-//             'features:id,vendor_id,title,description',
-//             'pricing:id,vendor_id,price,price_name,price_type,price_category'
-//         ]);
-
-//     // Filter by category name
-//     if ($categoryName) {
-//         $category = Category::where('name', $categoryName)->first();
-//         if (!$category) {
-//             return response()->json(['message' => 'Category not found.'], 404);
-//         }
-//         $vendorsQuery->where('category_id', $category->id);
-//     }
-
-//     // Filter by subcategory name
-//     if ($subcategoryName) {
-//         $subCategory = SubCategory::where('name', $subcategoryName)->first();
-//         if (!$subCategory) {
-//             return response()->json(['message' => 'Subcategory not found.'], 404);
-//         }
-//         $vendorsQuery->where('subcategory_id', $subCategory->id);
-//     }
-
-//     // Filter by city
-//     if ($city) {
-//         $vendorsQuery->where('city', $city);
-//     }
-
-//     // Filter by state
-//     if ($state) {
-//         $vendorsQuery->where('state', $state);
-//     }
-
-//     $vendors = $vendorsQuery->get();
-
-//     return response()->json([
-//         'filters' => [
-//             'category' => $categoryName,
-//             'subcategory' => $subcategoryName,
-//             'city' => $city,
-//             'state' => $state,
-//         ],
-//         'vendors' => $vendors
-//     ]);
-// }
-// public function filterVendors(Request $request): JsonResponse
-// {
-//     $categoryName = $request->query('category');
-//     $subcategoryName = $request->query('subcategory');
-//     $city = $request->query('city');
-//     $state = $request->query('state');
-
-//     $vendorsQuery = Vendor::query()
-//         ->select(
-//             'id', 'name', 'slug', 'category_id', 'subcategory_id',
-//             'address1', 'address2', 'map_url', 'state', 'city', 'country',
-//             'based_area', 'short_description', 'about_title', 'text_editor',
-//             'call_number', 'whatsapp_number', 'mail_id', 'cover_image'
-//         )
-//         ->with([
-//             'images:id,vendor_id,image',
-//             'features:id,vendor_id,title,description',
-//             'pricing:id,vendor_id,price,price_name,price_type,price_category'
-//         ]);
-
-//     // Apply filters only if present
-//     if ($categoryName) {
-//         $category = Category::where('name', $categoryName)->first();
-//         if (!$category) {
-//             return response()->json(['message' => 'Category not found.'], 404);
-//         }
-//         $vendorsQuery->where('category_id', $category->id);
-//     }
-
-//     if ($subcategoryName) {
-//         $subCategory = SubCategory::where('name', $subcategoryName)->first();
-//         if (!$subCategory) {
-//             return response()->json(['message' => 'Subcategory not found.'], 404);
-//         }
-//         $vendorsQuery->where('subcategory_id', $subCategory->id);
-//     }
-
-//     if ($city) {
-//         $vendorsQuery->where('city', $city);
-//     }
-
-//     if ($state) {
-//         $vendorsQuery->where('state', $state);
-//     }
-
-//     // Get all or filtered vendors
-//     $vendors = $vendorsQuery->get();
-
-//     return response()->json([
-//         'filters' => [
-//             'category' => $categoryName,
-//             'subcategory' => $subcategoryName,
-//             'city' => $city,
-//             'state' => $state,
-//         ],
-//         'vendors' => $vendors
-//     ]);
-// }
-
-// public function filterVendors(Request $request): JsonResponse
-// {
-//     $categoryName = $request->query('category');
-//     $subcategoryName = $request->query('subcategory');
-//     $city = $request->query('city');
-//     $state = $request->query('state');
-//     $limit = $request->query('limit', 10); // default 10
-//     $page = $request->query('page', 1); // default 1
-
-//     $vendorsQuery = Vendor::query()
-//         ->select(
-//             'id', 'name', 'slug', 'category_id', 'subcategory_id',
-//             'address1', 'address2', 'map_url', 'state', 'city', 'country',
-//             'based_area', 'short_description', 'about_title', 'text_editor',
-//             'call_number', 'whatsapp_number', 'mail_id', 'cover_image'
-//         )
-//         ->with([
-//             'images:id,vendor_id,image',
-//             'features:id,vendor_id,title,description',
-//             'pricing:id,vendor_id,price,price_name,price_type,price_category'
-//         ]);
-
-//     // Apply filters
-//     if ($categoryName) {
-//         $category = Category::where('name', $categoryName)->first();
-//         if (!$category) {
-//             return response()->json(['message' => 'Category not found.'], 404);
-//         }
-//         $vendorsQuery->where('category_id', $category->id);
-//     }
-
-//     if ($subcategoryName) {
-//         $subCategory = SubCategory::where('name', $subcategoryName)->first();
-//         if (!$subCategory) {
-//             return response()->json(['message' => 'Subcategory not found.'], 404);
-//         }
-//         $vendorsQuery->where('subcategory_id', $subCategory->id);
-//     }
-
-//     if ($city) {
-//         $vendorsQuery->where('city', $city);
-//     }
-
-//     if ($state) {
-//         $vendorsQuery->where('state', $state);
-//     }
-
-//     // Apply pagination
-//     $vendors = $vendorsQuery->paginate($limit, ['*'], 'page', $page);
-
-//     return response()->json([
-//         'filters' => [
-//             'category' => $categoryName,
-//             'subcategory' => $subcategoryName,
-//             'city' => $city,
-//             'state' => $state,
-//             'limit' => $limit,
-//             'page' => $page,
-//         ],
-//         'vendors' => $vendors
-//     ]);
-// }
-
-public function filterVendors(Request $request): JsonResponse
-{
-    $categoryName = $request->query('category');
-    $subcategoryName = $request->query('subcategory');
-    $city = $request->query('city');
-    $state = $request->query('state');
-    $search = $request->query('search'); // search by vendor name
-    $limit = $request->query('limit', 10);
-    $page = $request->query('page', 1);
-
-    $vendorsQuery = Vendor::query()
-        ->select(
-            'id', 'name', 'slug', 'category_id', 'subcategory_id',
-            'address1', 'address2', 'map_url', 'state', 'city', 'country',
-            'based_area', 'short_description', 'about_title', 'text_editor',
-            'call_number', 'whatsapp_number', 'mail_id', 'cover_image','user_id'
-        )
-        ->with([
-            'images:id,vendor_id,image',
-            'features:id,vendor_id,title,description',
-            'pricing:id,vendor_id,price,price_name,price_type,price_category'
-        ]);
-
-    // Apply filters
-    if ($categoryName) {
-        $category = Category::where('name', $categoryName)->first();
-        if (!$category) {
-            return response()->json(['message' => 'Category not found.'], 404);
-        }
-        $vendorsQuery->where('category_id', $category->id);
-    }
-
-    if ($subcategoryName) {
-        $subCategory = SubCategory::where('name', $subcategoryName)->first();
-        if (!$subCategory) {
-            return response()->json(['message' => 'Subcategory not found.'], 404);
-        }
-        $vendorsQuery->where('subcategory_id', $subCategory->id);
-    }
-
-    if ($city) {
-        $vendorsQuery->where('city', $city);
-    }
-
-    if ($state) {
-        $vendorsQuery->where('state', $state);
-    }
-
-    // Apply search by vendor name
-    if ($search) {
-        $vendorsQuery->where('name', 'like', '%' . $search . '%');
-    }
-
-    // Apply pagination
-    $vendors = $vendorsQuery->paginate($limit, ['*'], 'page', $page);
-
-    return response()->json([
-        'filters' => [
-            'category' => $categoryName,
-            'subcategory' => $subcategoryName,
-            'city' => $city,
-            'state' => $state,
-            'search' => $search,
-            'limit' => $limit,
-            'page' => $page,
-        ],
-        'vendors' => $vendors
-    ]);
-}
-
-
     // List all vendors
     public function index()
     {
@@ -433,14 +500,248 @@ public function filterVendors(Request $request): JsonResponse
     }
 
 
+// public function store(Request $request)
+// {
+//     DB::beginTransaction();
+//     try {
+//         $validated = $request->validate([
+//             'name' => 'required|string|max:255',
+//             'category_id' => 'required|exists:categories,id',
+//             'subcategory_id' => 'required|exists:sub_categories,id',
+//             'address1' => 'required|string|max:255',
+//             'address2' => 'nullable|string|max:255',
+//             'map_url' => 'nullable|string|max:255',
+//             'state' => 'required|string|max:255',
+//             'city' => 'required|string|max:255',
+//             'country' => 'required|string|max:255',
+//             'based_area' => 'nullable|string|max:512',
+//             'short_description' => 'nullable|string|max:512',
+//             'about_title' => 'nullable|string|max:255',
+//             'text_editor' => 'nullable|string',
+//             'call_number' => 'required|string|unique:vendors',
+//             'whatsapp_number' => 'nullable|string|unique:vendors',
+//             'mail_id' => 'required|email|unique:vendors',
+//             'cover_image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+//             'images.*' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+//             'features' => 'nullable|array',
+//             'features.*.title' => 'required_with:features|string|max:255',
+//             'features.*.description' => 'required_with:features|string',
+//             'pricing' => 'nullable|array',
+//             'pricing.*.price_name' => 'required_with:pricing|string|max:255',
+//             'pricing.*.price_type' => 'required_with:pricing|in:package,variable',
+//             'pricing.*.price_category' => 'required_with:pricing|string|max:255',
+//             'pricing.*.price' => 'required_with:pricing|numeric|min:0',
+//         ]);
+
+//         // Generate slug based on name, based_area, and city
+//         $name = $validated['name'];
+//         $based_area = $validated['based_area'] ?? '';
+//         $city = $validated['city'];
+        
+//         $slug = Str::slug("{$name}-{$based_area}-{$city}");
+        
+//         // Ensure slug uniqueness
+//         $count = Vendor::where('slug', 'LIKE', "{$slug}%")->count();
+//         if ($count > 0) {
+//             $slug .= '-' . ($count + 1);
+//         }
+
+//         $validated['slug'] = $slug;
+
+//         if ($request->hasFile('cover_image')) {
+//             $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
+//             $validated['cover_image'] = $imagePath;
+//         }
+
+//         $vendor = Vendor::create($validated);
+
+//         if ($request->hasFile('images')) {
+//             $imageData = [];
+//             foreach ($request->file('images') as $image) {
+//                 $imagePath = $image->store('vendor_images', 'public');
+//                 $imageData[] = ['vendor_id' => $vendor->id, 'image' => $imagePath];
+//             }
+//             Image::insert($imageData);
+//         }
+
+//         if ($request->has('features')) {
+//             $featureData = [];
+//             foreach ($request->input('features') as $feature) {
+//                 $featureData[] = [
+//                     'vendor_id' => $vendor->id,
+//                     'title' => $feature['title'],
+//                     'description' => $feature['description'],
+//                 ];
+//             }
+//             Feature::insert($featureData);
+//         }
+
+//         if ($request->has('pricing')) {
+//             $pricingData = [];
+//             foreach ($request->input('pricing') as $price) {
+//                 $pricingData[] = [
+//                     'vendor_id' => $vendor->id,
+//                     'price_name' => $price['price_name'],
+//                     'price_type' => $price['price_type'],
+//                     'price_category' => $price['price_category'],
+//                     'price' => $price['price'],
+//                 ];
+//             }
+//             Pricing::insert($pricingData);
+//         }
+
+//         DB::commit();
+
+//         return response()->json([
+//             'message' => 'Vendor and related data created successfully',
+//             'vendor' => $vendor
+//         ], 201);
+//     } catch (ValidationException $e) {
+//         DB::rollBack();
+//         throw new HttpResponseException(response()->json([
+//             'message' => 'Validation failed',
+//             'errors' => $e->errors(),
+//         ], 422));
+//     } catch (\Exception $e) {
+//         DB::rollBack();
+//         return response()->json([
+//             'message' => 'An error occurred',
+//             'error' => $e->getMessage(),
+//         ], 500);
+//     }
+// }
+
+//    public function store(Request $request)
+// {
+//     DB::beginTransaction();
+
+//     try {
+//         $validated = $request->validate([
+//             'name' => 'required|string|max:255',
+//             'category_id' => 'required|exists:categories,id',
+//             'subcategory_id' => 'required|exists:sub_categories,id',
+//             'community_id' => 'required|in:1,2,3,4,5,6', // ✅ Added community ID validation
+//             'address1' => 'required|string|max:255',
+//             'address2' => 'nullable|string|max:255',
+//             'map_url' => 'nullable|string|max:255',
+//             'state' => 'required|string|max:255',
+//             'city' => 'required|string|max:255',
+//             'country' => 'required|string|max:255',
+//             'based_area' => 'nullable|string|max:512',
+//             'short_description' => 'nullable|string|max:512',
+//             'about_title' => 'nullable|string|max:255',
+//             'text_editor' => 'nullable|string',
+//             'call_number' => 'required|string|unique:vendors',
+//             'whatsapp_number' => 'nullable|string|unique:vendors',
+//             'mail_id' => 'required|email|unique:vendors',
+//             'cover_image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+//             'images.*' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+
+//             'features' => 'nullable|array',
+//             'features.*.title' => 'required_with:features|string|max:255',
+//             'features.*.description' => 'required_with:features|string',
+
+//             'pricing' => 'nullable|array',
+//             'pricing.*.price_name' => 'required_with:pricing|string|max:255',
+//             'pricing.*.price_type' => 'required_with:pricing|in:package,variable',
+//             'pricing.*.price_category' => 'required_with:pricing|string|max:255',
+//             'pricing.*.price' => 'required_with:pricing|numeric|min:0',
+//         ]);
+
+//         // Generate slug using name, based_area, and city
+//         $name = $validated['name'];
+//         $based_area = $validated['based_area'] ?? '';
+//         $city = $validated['city'];
+//         $slug = Str::slug("{$name}-{$based_area}-{$city}");
+
+//         // Ensure slug is unique
+//         $count = Vendor::where('slug', 'LIKE', "{$slug}%")->count();
+//         if ($count > 0) {
+//             $slug .= '-' . ($count + 1);
+//         }
+//         $validated['slug'] = $slug;
+
+//         // Upload cover image if available
+//         if ($request->hasFile('cover_image')) {
+//             $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
+//             $validated['cover_image'] = $imagePath;
+//         }
+
+//         // Create vendor
+//         $vendor = Vendor::create($validated);
+
+//         // Store additional images
+//         if ($request->hasFile('images')) {
+//             $imageData = [];
+//             foreach ($request->file('images') as $image) {
+//                 $imagePath = $image->store('vendor_images', 'public');
+//                 $imageData[] = [
+//                     'vendor_id' => $vendor->id,
+//                     'image' => $imagePath,
+//                 ];
+//             }
+//             Image::insert($imageData);
+//         }
+
+//         // Store features
+//         if ($request->has('features')) {
+//             $featureData = [];
+//             foreach ($request->input('features') as $feature) {
+//                 $featureData[] = [
+//                     'vendor_id' => $vendor->id,
+//                     'title' => $feature['title'],
+//                     'description' => $feature['description'],
+//                 ];
+//             }
+//             Feature::insert($featureData);
+//         }
+
+//         // Store pricing
+//         if ($request->has('pricing')) {
+//             $pricingData = [];
+//             foreach ($request->input('pricing') as $price) {
+//                 $pricingData[] = [
+//                     'vendor_id' => $vendor->id,
+//                     'price_name' => $price['price_name'],
+//                     'price_type' => $price['price_type'],
+//                     'price_category' => $price['price_category'],
+//                     'price' => $price['price'],
+//                 ];
+//             }
+//             Pricing::insert($pricingData);
+//         }
+
+//         DB::commit();
+
+//         return response()->json([
+//             'message' => 'Vendor and related data created successfully',
+//             'vendor' => $vendor
+//         ], 201);
+//     } catch (ValidationException $e) {
+//         DB::rollBack();
+//         throw new HttpResponseException(response()->json([
+//             'message' => 'Validation failed',
+//             'errors' => $e->errors(),
+//         ], 422));
+//     } catch (\Exception $e) {
+//         DB::rollBack();
+//         return response()->json([
+//             'message' => 'An error occurred',
+//             'error' => $e->getMessage(),
+//         ], 500);
+//     }
+// }
 public function store(Request $request)
 {
     DB::beginTransaction();
+
     try {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:sub_categories,id',
+            'community_id' => 'required|array', // now expects array
+            'community_id.*' => 'in:1,2,3,4,5,6', // each value must be valid
             'address1' => 'required|string|max:255',
             'address2' => 'nullable|string|max:255',
             'map_url' => 'nullable|string|max:255',
@@ -456,9 +757,11 @@ public function store(Request $request)
             'mail_id' => 'required|email|unique:vendors',
             'cover_image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
             'images.*' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+
             'features' => 'nullable|array',
             'features.*.title' => 'required_with:features|string|max:255',
             'features.*.description' => 'required_with:features|string',
+
             'pricing' => 'nullable|array',
             'pricing.*.price_name' => 'required_with:pricing|string|max:255',
             'pricing.*.price_type' => 'required_with:pricing|in:package,variable',
@@ -466,37 +769,42 @@ public function store(Request $request)
             'pricing.*.price' => 'required_with:pricing|numeric|min:0',
         ]);
 
-        // Generate slug based on name, based_area, and city
+        // Generate slug using name, based_area, and city
         $name = $validated['name'];
         $based_area = $validated['based_area'] ?? '';
         $city = $validated['city'];
-        
         $slug = Str::slug("{$name}-{$based_area}-{$city}");
-        
-        // Ensure slug uniqueness
+
+        // Ensure slug is unique
         $count = Vendor::where('slug', 'LIKE', "{$slug}%")->count();
         if ($count > 0) {
             $slug .= '-' . ($count + 1);
         }
-
         $validated['slug'] = $slug;
 
+        // Upload cover image if available
         if ($request->hasFile('cover_image')) {
             $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
             $validated['cover_image'] = $imagePath;
         }
 
+        // Create vendor (community_id will be saved as JSON)
         $vendor = Vendor::create($validated);
 
+        // Store additional images
         if ($request->hasFile('images')) {
             $imageData = [];
             foreach ($request->file('images') as $image) {
                 $imagePath = $image->store('vendor_images', 'public');
-                $imageData[] = ['vendor_id' => $vendor->id, 'image' => $imagePath];
+                $imageData[] = [
+                    'vendor_id' => $vendor->id,
+                    'image' => $imagePath,
+                ];
             }
             Image::insert($imageData);
         }
 
+        // Store features
         if ($request->has('features')) {
             $featureData = [];
             foreach ($request->input('features') as $feature) {
@@ -509,6 +817,7 @@ public function store(Request $request)
             Feature::insert($featureData);
         }
 
+        // Store pricing
         if ($request->has('pricing')) {
             $pricingData = [];
             foreach ($request->input('pricing') as $price) {
@@ -544,8 +853,74 @@ public function store(Request $request)
     }
 }
 
-   
 
+
+// public function update(Request $request, $id): JsonResponse
+// {
+//     $vendor = Vendor::find($id);
+
+//     if (!$vendor) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Vendor not found.'
+//         ], 404);
+//     }
+
+//     $validated = $request->validate([
+//         'name' => 'sometimes|string|max:255',
+//         'category_id' => 'sometimes|exists:categories,id',
+//         'subcategory_id' => 'sometimes|exists:sub_categories,id',
+//         'community_id' => 'sometimes|in:1,2,3,4,5,6', // ✅ Added community_id validation
+//         'address1' => 'sometimes|string|max:255',
+//         'address2' => 'sometimes|nullable|string|max:255',
+//         'map_url' => 'sometimes|nullable|string|max:255',
+//         'state' => 'sometimes|string|max:255',
+//         'city' => 'sometimes|string|max:255',
+//         'country' => 'sometimes|string|max:255',
+//         'based_area' => 'nullable|string|max:512',
+//         'short_description' => 'nullable|string|max:512',
+//         'about_title' => 'sometimes|nullable|string|max:255',
+//         'text_editor' => 'sometimes|nullable|string',
+//         'call_number' => 'sometimes|string|unique:vendors,call_number,' . $id,
+//         'whatsapp_number' => 'sometimes|nullable|string|unique:vendors,whatsapp_number,' . $id,
+//         'mail_id' => 'sometimes|email|unique:vendors,mail_id,' . $id,
+//         'cover_image' => 'sometimes|nullable|image|mimes:jpg,png,jpeg|max:2048',
+//     ]);
+
+//     // Handle cover image update
+//     if ($request->hasFile('cover_image')) {
+//         if ($vendor->cover_image) {
+//             $oldImagePath = str_replace('storage/', '', $vendor->cover_image);
+//             Storage::disk('public')->delete($oldImagePath);
+//         }
+
+//         $imagePath = $request->file('cover_image')->store('vendor_images', 'public');
+//         $validated['cover_image'] = 'storage/' . $imagePath;
+//     }
+
+//     // Update slug if name is changed
+//     if (isset($validated['name'])) {
+//         $slug = Str::slug($validated['name']);
+//         $existingCount = Vendor::where('slug', 'LIKE', "{$slug}%")->where('id', '!=', $id)->count();
+//         if ($existingCount > 0) {
+//             $slug .= '-' . ($existingCount + 1);
+//         }
+//         $validated['slug'] = $slug;
+//     }
+
+//     $vendor->update($validated);
+
+//     // Return full image URL if cover image exists
+//     if ($vendor->cover_image) {
+//         $vendor->cover_image = url($vendor->cover_image);
+//     }
+
+//     return response()->json([
+//         'success' => true,
+//         'message' => 'Vendor updated successfully.',
+//         'data' => $vendor
+//     ], 200);
+// }
 public function update(Request $request, $id): JsonResponse
 {
     $vendor = Vendor::find($id);
@@ -561,6 +936,8 @@ public function update(Request $request, $id): JsonResponse
         'name' => 'sometimes|string|max:255',
         'category_id' => 'sometimes|exists:categories,id',
         'subcategory_id' => 'sometimes|exists:sub_categories,id',
+        'community_id' => 'sometimes|array', // Accept array
+        'community_id.*' => 'in:1,2,3,4,5,6', // Validate each ID in array
         'address1' => 'sometimes|string|max:255',
         'address2' => 'sometimes|nullable|string|max:255',
         'map_url' => 'sometimes|nullable|string|max:255',
@@ -577,7 +954,12 @@ public function update(Request $request, $id): JsonResponse
         'cover_image' => 'sometimes|nullable|image|mimes:jpg,png,jpeg|max:2048',
     ]);
 
-    // Image handling
+    // Convert community_id array to JSON string if present
+    if (isset($validated['community_id'])) {
+        $validated['community_id'] = json_encode($validated['community_id']);
+    }
+
+    // Handle cover image update
     if ($request->hasFile('cover_image')) {
         if ($vendor->cover_image) {
             $oldImagePath = str_replace('storage/', '', $vendor->cover_image);
@@ -588,14 +970,19 @@ public function update(Request $request, $id): JsonResponse
         $validated['cover_image'] = 'storage/' . $imagePath;
     }
 
-    // Optional slug generation based on vendor name
+    // Update slug if name is changed
     if (isset($validated['name'])) {
-        $validated['slug'] = Str::slug($validated['name']);
+        $slug = Str::slug($validated['name']);
+        $existingCount = Vendor::where('slug', 'LIKE', "{$slug}%")->where('id', '!=', $id)->count();
+        if ($existingCount > 0) {
+            $slug .= '-' . ($existingCount + 1);
+        }
+        $validated['slug'] = $slug;
     }
 
     $vendor->update($validated);
 
-    // Return full image URL if exists
+    // Append full image URL for response
     if ($vendor->cover_image) {
         $vendor->cover_image = url($vendor->cover_image);
     }

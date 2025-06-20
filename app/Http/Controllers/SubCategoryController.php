@@ -3,121 +3,85 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Str;
 use App\Models\SubCategory;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log; // For Debugging
-use Illuminate\Http\JsonResponse;
 
 class SubCategoryController extends Controller
 {
-    // Display a listing of the resource
-    // public function index()
-    // {
-    //     $subcategories = SubCategory::all()->map(function ($subcategory) {
-    //         if ($subcategory->image) {
-    //             $subcategory->image_url = Storage::disk('public')->url($subcategory->image);
-    //         } else {
-    //             $subcategory->image_url = null;
-    //         }
-    //         return $subcategory;
-    //     });
+    // List all subcategories with search, pagination, and category relation
+public function index(Request $request)
+{
+    $baseUrl = 'https://api.weddingzadda.com/';
+    $query = SubCategory::with('category');
 
-    //     return response()->json($subcategories);
-    // }
-//     public function index()
-//     {
-//         $baseUrl = config('https://api.weddingzadda.com/');
+    // Search by name
+    if ($search = $request->query('search')) {
+        $query->where('name', 'like', '%' . $search . '%');
+    }
 
-//         $subcategories = SubCategory::all()->map(function ($subcategory) use ($baseUrl) {
-//             if ($subcategory->image) {
-//                 $subcategory->image_url = $baseUrl . Storage::url($subcategory->image);
-//             } else {
-//                 $subcategory->image_url = null;
-//             }
-//             return $subcategory;
-//         });
+    // Pagination
+    $limit = $request->query('limit', 10);
+    $page = $request->query('page', 1);
+    $subcategories = $query->paginate($limit, ['*'], 'page', $page);
 
-//         return response()->json($subcategories);
-//     }
+    // Transform and return only clean array
+    $data = $subcategories->getCollection()->transform(function ($subcategory) use ($baseUrl) {
+        return [
+            'id' => $subcategory->id,
+            'name' => $subcategory->name,
+            'slug' => $subcategory->slug,
+            'description' => $subcategory->description,
+            'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
+            'category' => $subcategory->category ? [
+                'id' => $subcategory->category->id,
+                'name' => $subcategory->category->name,
+                'slug' => $subcategory->category->slug,
+            ] : null,
+        ];
+    });
 
-//     public function fetchAll()
-// {
-//     $baseUrl = 'https://api.weddingzadda.com/storage/';
+    return response()->json($data);
+}
+public function fetchAll(Request $request)
+{
+    $baseUrl = 'https://api.weddingzadda.com/';
+    $query = SubCategory::with('vendors');
 
-//     $subcategories = SubCategory::with('vendors')->get()->map(function ($subcategory) use ($baseUrl) {
-//         return [
-//             'name' => $subcategory->name,
-//             'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
-//             'vendors' => $subcategory->vendors->map(function ($vendor) {
-//                 return [
-//                     'id' => $vendor->id,
-//                     'name' => $vendor->name,
-//                     'city' => $vendor->city,
-//                     'cover_image' => $vendor->cover_image,
-//                     // Add more vendor fields if needed
-//                 ];
-//             }),
-//         ];
-//     });
+    // Search by name
+    if ($search = $request->query('search')) {
+        $query->where('name', 'like', '%' . $search . '%');
+    }
 
-//     return response()->json($subcategories);
-// }
-  // Fetch all subcategories with full image URL
-  public function index()
-  {
-      $baseUrl = 'https://api.weddingzadda.com/';
+    // Pagination
+    $limit = $request->query('limit', 10);
+    $page = $request->query('page', 1);
+    $subcategories = $query->paginate($limit, ['*'], 'page', $page);
 
-      $subcategories = SubCategory::with('category')->get()->map(function ($subcategory) use ($baseUrl) {
-          return [
-              'id' => $subcategory->id,
-              'name' => $subcategory->name,
-              'slug' => $subcategory->slug,
-              'description' => $subcategory->description,
-              'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
-              'category' => $subcategory->category ? [
-                  'id' => $subcategory->category->id,
-                  'name' => $subcategory->category->name,
-                  'slug' => $subcategory->category->slug,
-              ] : null,
-          ];
-      });
+    // Transform and return only clean array
+    $data = $subcategories->getCollection()->transform(function ($subcategory) use ($baseUrl) {
+        return [
+            'id' => $subcategory->id,
+            'name' => $subcategory->name,
+            'slug' => $subcategory->slug,
+            'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
+            'vendors' => $subcategory->vendors->map(function ($vendor) use ($baseUrl) {
+                return [
+                    'id' => $vendor->id,
+                    'name' => $vendor->name,
+                    'city' => $vendor->city,
+                    'cover_image' => $vendor->cover_image ? $baseUrl . $vendor->cover_image : null,
+                ];
+            }),
+        ];
+    });
 
-      return response()->json($subcategories);
-  }
+    return response()->json($data);
+}
 
-  // Fetch subcategories with vendors
-  public function fetchAll()
-  {
-      $baseUrl = 'https://api.weddingzadda.com/';
 
-      $subcategories = SubCategory::with('vendors')->get()->map(function ($subcategory) use ($baseUrl) {
-          return [
-              'id' => $subcategory->id,
-              'name' => $subcategory->name,
-              'slug' => $subcategory->slug,
-              'image' => $subcategory->image ? $baseUrl . $subcategory->image : null,
-              'vendors' => $subcategory->vendors->map(function ($vendor) use ($baseUrl) {
-                  return [
-                      'id' => $vendor->id,
-                      'name' => $vendor->name,
-                      'city' => $vendor->city,
-                      'cover_image' => $vendor->cover_image ? $baseUrl . $vendor->cover_image : null,
-                      // Add more fields if needed
-                  ];
-              }),
-          ];
-      });
-
-      return response()->json($subcategories);
-  }
     // Store a newly created resource in storage
     public function store(Request $request): JsonResponse
     {
-        $baseUrl = 'https://api.weddingzadda.com/';
-        
         try {
             // Validate request data
             $validatedData = $request->validate([
@@ -153,7 +117,7 @@ class SubCategoryController extends Controller
     
             // Append full image URL if exists
             if ($subcategory->image) {
-                $subcategory->image = $baseUrl . $subcategory->image;
+                $subcategory->image = $this->baseUrl . $subcategory->image;
             }
     
             return response()->json([
@@ -170,7 +134,6 @@ class SubCategoryController extends Controller
             ], 422));
         }
     }
-    
     // Display the specified resource
     public function show(SubCategory $subcategory)
     {
