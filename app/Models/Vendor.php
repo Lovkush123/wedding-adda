@@ -13,10 +13,8 @@ class Vendor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'user_id', // Added user_id here
-        'category_id', 'subcategory_id', 'address1', 'address2', 'map_url', 'state', 'city', 'country', 
-        'based_area', 'food_type', // Added food_type here
-        'short_description', 'about_title', 'text_editor', 
+        'name', 'slug', 'category_id', 'subcategory_id', 'community_id', 'address1', 'address2', 'map_url',
+        'state', 'city', 'country', 'based_area', 'short_description', 'about_title', 'text_editor',
         'call_number', 'whatsapp_number', 'mail_id', 'cover_image'
     ];
 
@@ -29,12 +27,6 @@ class Vendor extends Model
         });
     }
 
-    // Relationship with User (optional)
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
     // Relationship with Category
     public function category(): BelongsTo
     {
@@ -45,6 +37,12 @@ class Vendor extends Model
     public function subCategory(): BelongsTo
     {
         return $this->belongsTo(SubCategory::class, 'subcategory_id');
+    }
+
+    // Relationship with Community
+    public function community(): BelongsTo
+    {
+        return $this->belongsTo(Community::class, 'community_id');
     }
 
     public function images(): HasMany
