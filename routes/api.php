@@ -39,7 +39,7 @@ Route::prefix('vendors')->group(function () {
     Route::post('/', [VendorController::class, 'store']);
     Route::post('/{id}', [VendorController::class, 'update']);
     Route::delete('/{id}', [VendorController::class, 'destroy']);
-    Route::get('/{id?}', [VendorController::class, 'fetchVendorDetails']);
+    Route::get('/{slug}', [VendorController::class, 'fetchVendorDetails']);
     Route::get('/subcategory/{slug}', [VendorController::class, 'getVendorsBySubCategorySlug']);
     Route::get('/category/{slug}', [VendorController::class, 'getCategoryDataBySlug']);
     Route::get('/alldata', [VendorController::class, 'getAllData']);

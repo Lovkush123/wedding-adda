@@ -440,18 +440,25 @@ class VendorController extends Controller
 
 
 
-     public function fetchVendorDetails($id = null)
+     public function fetchVendorDetails($slug = null)
     {
-        $query = Vendor::with(['images:id,vendor_id,image', 'features:id,vendor_id,title,description', 'pricing:id,vendor_id,price,price_name,price_type,price_category']);
+$query = Vendor::with([
+    'category',
+    'subcategory',
+    'castcommunities',
+    'eventcommunities',
+    'images:id,vendor_id,image',
+    'features:id,vendor_id,title,description',
+    'pricing:id,vendor_id,price,price_name,price_type,price_category'
+    ]);
 
-        if ($id) {
-            $vendor = $query->find($id);
+        if ($slug) {
+            $vendor = $query->where('slug', $slug);
 
             if (!$vendor) {
                 return response()->json(['message' => 'Vendor not found'], 404);
             }
 
-            return response()->json(['vendor' => $vendor]);
         }
 
         $vendors = $query->get();
