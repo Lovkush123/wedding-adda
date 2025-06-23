@@ -34,16 +34,27 @@ class Vendor extends Model
     }
 
     // Relationship with SubCategory
-    public function subCategory(): BelongsTo
+    public function subcategory(): BelongsTo
     {
         return $this->belongsTo(SubCategory::class, 'subcategory_id');
     }
 
-    // Relationship with Community
-    public function community(): BelongsTo
-    {
-        return $this->belongsTo(Community::class, 'community_id');
-    }
+  public function communities()
+{
+    return $this->belongsToMany(Community::class, 'community_vendor', 'vendor_id', 'community_id');
+}
+
+// Filtered versions
+public function castcommunities()
+{
+    return $this->communities()->where('type', 'cast');
+}
+
+public function eventcommunities()
+{
+    return $this->communities()->where('type', 'event');
+}
+
 
     public function images(): HasMany
     {

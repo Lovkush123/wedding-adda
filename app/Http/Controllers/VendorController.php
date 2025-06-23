@@ -18,6 +18,91 @@ use Illuminate\Http\JsonResponse;
 
 class VendorController extends Controller
 {
+
+   public function index(Request $request)
+{
+    $limit = $request->get("limit", 10); // default value
+    $page = $request->get("page", 1);
+    $search = $request->get("search");
+    $category = $request->get("category");
+    $subcategory = $request->get("subcategory");
+    $cast = $request->get("cast"); // spelling assumed
+    $event = $request->get("event"); // spelling assumed
+    $state = $request->get("state"); // spelling assumed
+    $city = $request->get("city"); // spelling assumed
+    $area = $request->get("area"); // spelling assumed
+
+    $query = Vendor::with([
+    'category',
+    'subcategory',
+    'castcommunities',
+    'eventcommunities',
+    'images:id,vendor_id,image',
+    'features:id,vendor_id,title,description',
+    'pricing:id,vendor_id,price,price_name,price_type,price_category'
+    ]);
+
+    if ($search) {
+        $query->where('name', 'like', '%' . $search . '%');
+    }
+      if ($city) {
+        $query->where('city', 'like', '%' . $city . '%');
+    }
+      if ($state) {
+        $query->where('state', 'like', '%' . $state . '%');
+    }
+      if ($area) {
+        $query->where('based_area', 'like', '%' . $area . '%');
+    }
+
+    if ($category) {
+        $query->whereHas('category', function ($q) use ($category) {
+            $q->where('slug', $category);
+        });
+    }
+
+    if ($subcategory) {
+        $query->whereHas('subcategory', function ($q) use ($subcategory) {
+            $q->where('slug', $subcategory);
+        });
+    }
+
+    if ($cast) {
+        $query->whereHas('castcommunities', function ($q) use ($cast) {
+            $q->where('slug', 'like', '%' . $cast . '%');
+        });
+    }
+
+    if ($event) {
+        $query->whereHas('eventcommunities', function ($q) use ($event) {
+            $q->where('slug', 'like', '%' . $event . '%');
+        });
+    }
+
+
+
+    $total = $query->count();
+    $vendors = $query->skip(($page - 1) * $limit)
+                     ->take($limit)
+                     ->get();
+
+   foreach ($vendors as $vendor) {
+    // Fix cover image URL
+    $vendor->cover_image = url('storage/' . $vendor->cover_image);
+
+    // Fix all image URLs
+    foreach ($vendor->images as $image) {
+        $image->image = url('storage/' . $image->image);
+    }
+}
+
+    return response()->json([
+        'message' => "All data fetched",
+        'data' => $vendors,
+        'total' => $total
+    ]);
+}
+
  
  public function getUniqueCities()
     {
@@ -493,11 +578,7 @@ class VendorController extends Controller
             'vendor' => $vendor
         ]);
     }
-    // List all vendors
-    public function index()
-    {
-        return response()->json(Vendor::all());
-    }
+
 
 
 // public function store(Request $request)

@@ -22,19 +22,20 @@ public function index(Request $request)
     }
 
     // Apply type filter
-    if (!is_null($request->query('type'))) {
-        $query->where('type', $request->query('type'));
+    if (!is_null($request->get('type'))) {
+        $query->where('type', $request->get('type'));
     }
 
     // Get all matched records (no pagination)
     $communities = $query->get();
 
     // Add full image URL
-    $data = $communities->map(function ($community) {
-        $community->image_url = $community->image ? asset($community->image) : null;
-        return $community;
-    });
-
+  $data = $communities->transform(function ($community) {
+    $community->image = $community->image 
+        ? url('storage/communities/' . basename($community->image))
+        : null;
+    return $community;
+});
     // Return the list of communities
     return response()->json($data);
 }
